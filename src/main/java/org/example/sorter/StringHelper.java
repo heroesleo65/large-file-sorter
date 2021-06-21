@@ -1,0 +1,200 @@
+package org.example.sorter;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+
+public class StringHelper {
+
+  private static volatile Field VALUE_OF_STRING = null;
+  private static volatile Field CODER_OF_STRING = null;
+  private static volatile Constructor<String> STRING_CONSTRUCTOR_BY_VALUE_AND_CODER = null;
+
+  private static volatile boolean SUPPORT_REFLECTION = true;
+
+  private StringHelper() {
+    throw new UnsupportedOperationException("StringHelper is utility");
+  }
+
+  private static Field getValueOfString() {
+    if (!SUPPORT_REFLECTION) {
+      return null;
+    }
+
+    if (VALUE_OF_STRING == null) {
+      synchronized (StringHelper.class) {
+        if (VALUE_OF_STRING == null) {
+          VALUE_OF_STRING = getField("value");
+          if (VALUE_OF_STRING == null) {
+            SUPPORT_REFLECTION = false;
+          }
+        }
+      }
+    }
+
+    return VALUE_OF_STRING;
+  }
+
+  private static Field getCoderOfString() {
+    if (!SUPPORT_REFLECTION) {
+      return null;
+    }
+
+    if (CODER_OF_STRING == null) {
+      synchronized (StringHelper.class) {
+        if (CODER_OF_STRING == null) {
+          CODER_OF_STRING = getField("coder");
+          if (CODER_OF_STRING == null) {
+            SUPPORT_REFLECTION = false;
+          }
+        }
+      }
+    }
+
+    return CODER_OF_STRING;
+  }
+
+  private static Constructor<String> getStringConstructorByValueAndCoder() {
+    if (!SUPPORT_REFLECTION) {
+      return null;
+    }
+
+    if (STRING_CONSTRUCTOR_BY_VALUE_AND_CODER == null) {
+      synchronized (StringHelper.class) {
+        if (STRING_CONSTRUCTOR_BY_VALUE_AND_CODER == null) {
+          STRING_CONSTRUCTOR_BY_VALUE_AND_CODER = getConstructor(
+              String.class, byte[].class, byte.class
+          );
+          if (STRING_CONSTRUCTOR_BY_VALUE_AND_CODER == null) {
+            SUPPORT_REFLECTION = false;
+          }
+        }
+      }
+    }
+
+    return STRING_CONSTRUCTOR_BY_VALUE_AND_CODER;
+  }
+
+  public static void disableReflection() {
+    SUPPORT_REFLECTION = false;
+  }
+
+  public static boolean checkSupportReflection() {
+    if (!SUPPORT_REFLECTION) {
+      return false;
+    }
+
+    if (getValueOfString() == null || getCoderOfString() == null ||
+        getStringConstructorByValueAndCoder() == null) {
+      SUPPORT_REFLECTION = false;
+    }
+    return SUPPORT_REFLECTION;
+  }
+
+  public static boolean hasSupportReflection() {
+    return SUPPORT_REFLECTION;
+  }
+
+  public static byte[] getValueArray(String value) {
+    if (value == null) {
+      return new byte[0];
+    }
+
+    var field = getValueOfString();
+    if (field == null) {
+      return null;
+    }
+
+    try {
+      return (byte[]) field.get(value);
+    } catch (IllegalAccessException e) {
+      SUPPORT_REFLECTION = false;
+      return null;
+    }
+  }
+
+  public static int getValueArray(String value, int offset, char[] chars, byte[] bytes) {
+    if (value == null || offset >= value.length()) {
+      return 0;
+    }
+
+    var count = Integer.min(value.length() - offset, chars.length);
+    value.getChars(offset, offset + count, chars, 0);
+
+    for (int i = 0; i < count; i++) {
+      bytes[2 * i] = (byte) ((chars[i] >>> 8) & 0xFF);
+      bytes[2 * i + 1] = (byte) (chars[i] & 0xFF);
+    }
+
+    return count;
+  }
+
+  public static byte getCoder(String value) {
+    if (value == null) {
+      return 0;
+    }
+
+    var field = getCoderOfString();
+    if (field == null) {
+      return -1;
+    }
+
+    try {
+      return field.getByte(value);
+    } catch (IllegalAccessException e) {
+      SUPPORT_REFLECTION = false;
+      return -1;
+    }
+  }
+
+  public static String newString(byte[] values, byte coder, int count, StringBuilder builder) {
+    if (values == null) {
+      return null;
+    }
+
+    if (coder < 0) {
+      return newString(values, count, builder);
+    }
+
+    var constructor = getStringConstructorByValueAndCoder();
+    if (constructor == null) {
+      return newString(values, count, builder);
+    }
+
+    try {
+      return constructor.newInstance(values, coder);
+    } catch (Exception ex) {
+      SUPPORT_REFLECTION = false;
+      return newString(values, count, builder);
+    }
+  }
+
+  private static String newString(byte[] values, int count, StringBuilder builder) {
+    builder.ensureCapacity(count);
+    builder.setLength(0);
+
+    for (int i = 0; i < count; i += 2) {
+      builder.append((char) ((values[i] << 8) + (values[i + 1])));
+    }
+    return builder.toString();
+  }
+
+  private static Field getField(String name) {
+    try {
+      var field = String.class.getDeclaredField(name);
+      field.setAccessible(true);
+      return field;
+    } catch (NoSuchFieldException ex) {
+      return null;
+    }
+  }
+
+  private static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?>... parameterTypes) {
+    try {
+      var constructor = clazz.getDeclaredConstructor(parameterTypes);
+      constructor.setAccessible(true);
+      return constructor;
+    } catch (NoSuchMethodException ex) {
+      return null;
+    }
+  }
+}
