@@ -2,8 +2,12 @@ package org.example.sorter;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.util.function.Supplier;
 
 public class StringHelper {
+
+  private static final String VALUE_OF_STRING_FIELD_NAME = "value";
+  private static final String CODER_OF_STRING_FIELD_NAME = "coder";
 
   private static volatile Field VALUE_OF_STRING = null;
   private static volatile Field CODER_OF_STRING = null;
@@ -15,63 +19,50 @@ public class StringHelper {
     throw new UnsupportedOperationException("StringHelper is utility");
   }
 
-  private static Field getValueOfString() {
+  @FunctionalInterface
+  private interface Callable<T> {
+    T call();
+  }
+
+  private static <T> T getLazyReflectionObject(Supplier<T> getter, Callable<T> setter) {
     if (!SUPPORT_REFLECTION) {
       return null;
     }
 
-    if (VALUE_OF_STRING == null) {
+    if (getter.get() == null) {
       synchronized (StringHelper.class) {
-        if (VALUE_OF_STRING == null) {
-          VALUE_OF_STRING = getField("value");
-          if (VALUE_OF_STRING == null) {
+        if (getter.get() == null) {
+          if (setter.call() == null) {
             SUPPORT_REFLECTION = false;
           }
         }
       }
     }
 
-    return VALUE_OF_STRING;
+    return getter.get();
+  }
+
+  private static Field getValueOfString() {
+    return getLazyReflectionObject(
+        () -> VALUE_OF_STRING,
+        () -> VALUE_OF_STRING = getField(VALUE_OF_STRING_FIELD_NAME)
+    );
   }
 
   private static Field getCoderOfString() {
-    if (!SUPPORT_REFLECTION) {
-      return null;
-    }
-
-    if (CODER_OF_STRING == null) {
-      synchronized (StringHelper.class) {
-        if (CODER_OF_STRING == null) {
-          CODER_OF_STRING = getField("coder");
-          if (CODER_OF_STRING == null) {
-            SUPPORT_REFLECTION = false;
-          }
-        }
-      }
-    }
-
-    return CODER_OF_STRING;
+    return getLazyReflectionObject(
+        () -> CODER_OF_STRING,
+        () -> CODER_OF_STRING = getField(CODER_OF_STRING_FIELD_NAME)
+    );
   }
 
   private static Constructor<String> getStringConstructorByValueAndCoder() {
-    if (!SUPPORT_REFLECTION) {
-      return null;
-    }
-
-    if (STRING_CONSTRUCTOR_BY_VALUE_AND_CODER == null) {
-      synchronized (StringHelper.class) {
-        if (STRING_CONSTRUCTOR_BY_VALUE_AND_CODER == null) {
-          STRING_CONSTRUCTOR_BY_VALUE_AND_CODER = getConstructor(
-              String.class, byte[].class, byte.class
-          );
-          if (STRING_CONSTRUCTOR_BY_VALUE_AND_CODER == null) {
-            SUPPORT_REFLECTION = false;
-          }
-        }
-      }
-    }
-
-    return STRING_CONSTRUCTOR_BY_VALUE_AND_CODER;
+    return getLazyReflectionObject(
+        () -> STRING_CONSTRUCTOR_BY_VALUE_AND_CODER,
+        () -> STRING_CONSTRUCTOR_BY_VALUE_AND_CODER = getConstructor(
+            String.class, byte[].class, byte.class
+        )
+    );
   }
 
   public static void disableReflection() {
