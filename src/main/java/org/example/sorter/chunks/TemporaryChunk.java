@@ -17,14 +17,14 @@ public class TemporaryChunk extends AbstractChunk {
 
   @Override
   public boolean load() {
-    var values = new byte[0];
-    var builder = new StringBuilder(0);
     try (var file = new RandomAccessFile(inputFile, "r")) {
       if (position >= file.length()) {
         return false;
       }
       file.seek(position);
 
+      var values = new byte[0];
+      var builder = new StringBuilder(0);
       for (int i = 0; i < data.length; i++) {
         int coder = file.read();
         if (coder < 0) {
