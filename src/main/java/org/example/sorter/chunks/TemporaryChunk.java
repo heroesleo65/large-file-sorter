@@ -16,7 +16,24 @@ public class TemporaryChunk extends AbstractChunk {
   }
 
   @Override
+  public String pop() {
+    var result = super.pop();
+    if (result == null && inputFile.exists() && inputFile.isFile()) {
+      try {
+        inputFile.delete();
+      } catch (Exception ex) {
+        // ignore
+      }
+    }
+    return result;
+  }
+
+  @Override
   public boolean load() {
+    if (!inputFile.exists() || !inputFile.isFile()) {
+      return false;
+    }
+
     try (var file = new RandomAccessFile(inputFile, "r")) {
       if (position >= file.length()) {
         return false;
