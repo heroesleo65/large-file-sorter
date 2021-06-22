@@ -73,7 +73,7 @@ public class TemporaryChunk extends AbstractChunk {
 
   @Override
   public void save() {
-    throw new UnsupportedOperationException("Load is not supported");
+    throw new UnsupportedOperationException("Save is not supported");
   }
 
   private int readInt(RandomAccessFile file) throws IOException {
