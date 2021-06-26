@@ -86,7 +86,7 @@ public class FileSorter implements Closeable {
       if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
         executor.shutdownNow();
         if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
-          System.err.println("Executor in FileSorter did not terminate");
+          log.error("Executor in FileSorter did not terminate");
         }
       }
     } catch (InterruptedException e) {
