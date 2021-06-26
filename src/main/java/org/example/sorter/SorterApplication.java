@@ -26,9 +26,10 @@ public class SorterApplication {
 
     var chunksCount = sorterCommand.getChunksCount();
     var chunkSize = sorterCommand.getStringsCount();
+    var bufferSize = sorterCommand.getBufferSize();
 
     try (var fileSorter = new FileSorter(input, charset, threadsCount)) {
-      fileSorter.sort(chunksCount, chunkSize, output);
+      fileSorter.sort(chunksCount, chunkSize, bufferSize, output);
     } catch (InterruptedException ex) {
       // ignore
     }
