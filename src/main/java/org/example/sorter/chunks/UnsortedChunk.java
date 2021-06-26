@@ -7,13 +7,19 @@ import java.io.OutputStream;
 import org.example.sorter.StringHelper;
 
 public class UnsortedChunk extends AbstractChunk {
-  private static final int COUNT_TEMP_DATA = 64;
+  private static final int DEFAULT_BUFFER_SIZE = 64;
 
   private final File outputFile;
+  private final int bufferSize;
 
   public UnsortedChunk(File outputFile, int chunkSize) {
+    this(outputFile, chunkSize, DEFAULT_BUFFER_SIZE);
+  }
+
+  public UnsortedChunk(File outputFile, int chunkSize, int bufferSize) {
     super(chunkSize);
     this.outputFile = outputFile;
+    this.bufferSize = bufferSize;
   }
 
   @Override
@@ -34,10 +40,10 @@ public class UnsortedChunk extends AbstractChunk {
         var value = StringHelper.getValueArray(line);
         if (value == null) {
           if (chars == null) {
-            chars = new char[COUNT_TEMP_DATA];
+            chars = new char[bufferSize];
           }
           if (bytes == null) {
-            bytes = new byte[2 * COUNT_TEMP_DATA];
+            bytes = new byte[2 * bufferSize];
           }
           writeData(stream, line, chars, bytes);
         } else {
