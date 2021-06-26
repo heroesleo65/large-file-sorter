@@ -45,21 +45,21 @@ public class StringHelper {
   private static Field getValueOfString() {
     return getLazyReflectionObject(
         () -> VALUE_OF_STRING,
-        () -> VALUE_OF_STRING = getField(VALUE_OF_STRING_FIELD_NAME)
+        () -> VALUE_OF_STRING = ReflectionHelper.getField(String.class, VALUE_OF_STRING_FIELD_NAME)
     );
   }
 
   private static Field getCoderOfString() {
     return getLazyReflectionObject(
         () -> CODER_OF_STRING,
-        () -> CODER_OF_STRING = getField(CODER_OF_STRING_FIELD_NAME)
+        () -> CODER_OF_STRING = ReflectionHelper.getField(String.class, CODER_OF_STRING_FIELD_NAME)
     );
   }
 
   private static Constructor<String> getStringConstructorByValueAndCoder() {
     return getLazyReflectionObject(
         () -> STRING_CONSTRUCTOR_BY_VALUE_AND_CODER,
-        () -> STRING_CONSTRUCTOR_BY_VALUE_AND_CODER = getConstructor(
+        () -> STRING_CONSTRUCTOR_BY_VALUE_AND_CODER = ReflectionHelper.getConstructor(
             String.class, byte[].class, byte.class
         )
     );
@@ -167,25 +167,5 @@ public class StringHelper {
       builder.append((char) ((values[i] << 8) + (values[i + 1])));
     }
     return builder.toString();
-  }
-
-  private static Field getField(String name) {
-    try {
-      var field = String.class.getDeclaredField(name);
-      field.setAccessible(true);
-      return field;
-    } catch (NoSuchFieldException ex) {
-      return null;
-    }
-  }
-
-  private static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?>... parameterTypes) {
-    try {
-      var constructor = clazz.getDeclaredConstructor(parameterTypes);
-      constructor.setAccessible(true);
-      return constructor;
-    } catch (NoSuchMethodException ex) {
-      return null;
-    }
   }
 }
