@@ -106,13 +106,31 @@ public final class StringHelper {
     }
 
     int maxLen = getMaxLength(values, fromIndex, toIndex);
+    if (maxLen == 0) {
+      // All elements are empty
+      return;
+    }
 
-    int from = fromIndex;
-    int to = toIndex;
-    for (int i = 0; i < maxLen; i++) {
+    // Sorting strings by first symbol
+    Arrays.sort(values, fromIndex, toIndex, (a, b) -> {
+      if (a.isEmpty()) {
+        return b.isEmpty() ? 0 : -1;
+      }
+      if (b.isEmpty()) {
+        return 1;
+      }
+      return a.charAt(0) - b.charAt(0);
+    });
+
+    // Sorting strings by another symbols
+    int from, to;
+    for (int i = 1; i < maxLen; i++) {
       int position = i;
 
-      do {
+      from = getIndexOfStringWithLengthGreaterThan(values, fromIndex, toIndex, i - 1);
+      to = getNextIndexNotEqualsToChar(values, from, toIndex, i - 1);
+
+      while (to <= toIndex) {
         Arrays.sort(values, from, to, (a, b) -> {
           if (position >= a.length()) {
             return position < b.length() ? -1 : 0;
@@ -123,18 +141,17 @@ public final class StringHelper {
           return a.charAt(position) - b.charAt(position);
         });
 
-        from = skipSmallString(values, to, toIndex, i - 1);
+        from = getIndexOfStringWithLengthGreaterThan(values, to, toIndex, i - 1);
         to = getNextIndexNotEqualsToChar(values, from, toIndex, i - 1);
-      } while (to <= toIndex);
-
-      from = skipSmallString(values, fromIndex, toIndex, i);
-      to = getNextIndexNotEqualsToChar(values, from, toIndex, i);
+      }
     }
   }
 
-  private static int skipSmallString(String[] values, int fromIndex, int toIndex, int position) {
+  private static int getIndexOfStringWithLengthGreaterThan(
+      String[] values, int fromIndex, int toIndex, int length
+  ) {
     int result = fromIndex;
-    while (result < toIndex && values[result].length() <= position) {
+    while (result < toIndex && values[result].length() <= length) {
       result++;
     }
     return result;
