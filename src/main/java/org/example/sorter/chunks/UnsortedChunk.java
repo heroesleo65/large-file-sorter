@@ -7,7 +7,7 @@ import java.io.OutputStream;
 import org.example.sorter.StringHelper;
 
 public class UnsortedChunk extends AbstractChunk {
-  private static final int DEFAULT_BUFFER_SIZE = 64;
+  private static final int DEFAULT_BUFFER_SIZE = 128;
 
   private final File outputFile;
   private final int bufferSize;

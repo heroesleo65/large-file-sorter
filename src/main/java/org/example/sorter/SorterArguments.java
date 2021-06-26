@@ -6,6 +6,7 @@ import lombok.Getter;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
+@SuppressWarnings("FieldMayBeFinal")
 @Getter
 @Command(description = "large file sorter")
 public class SorterArguments {
@@ -24,6 +25,12 @@ public class SorterArguments {
       description = "count of strings in chunk (default: ${DEFAULT-VALUE})"
   )
   private int stringsCount = 64;
+
+  @Option(
+      names = {"--buffer-size"},
+      description = "buffer size for saving data (default: ${DEFAULT-VALUE})"
+  )
+  private int bufferSize = 128;
 
   @Option(names = {"-i", "--input"}, description = "input file", required = true)
   private Path input;
