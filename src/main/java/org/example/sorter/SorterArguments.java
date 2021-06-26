@@ -10,7 +10,7 @@ import picocli.CommandLine.Option;
 @Command(description = "large file sorter")
 public class SorterArguments {
 
-  @Option(names = {"--threads"}, description = "count of threads")
+  @Option(names = {"--threads"}, description = "count of threads (default: ${DEFAULT-VALUE})")
   private int threadsCount = Runtime.getRuntime().availableProcessors();
 
   @Option(

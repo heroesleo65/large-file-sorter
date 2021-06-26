@@ -22,7 +22,7 @@ public class SorterApplication {
     var input = sorterCommand.getInput();
     var output = sorterCommand.getOutput();
     var charset = sorterCommand.getCharset();
-    var threadsCount = getThreadsCount(sorterCommand.getThreadsCount());
+    var threadsCount = sorterCommand.getThreadsCount();
 
     var chunksCount = sorterCommand.getChunksCount();
     var chunkSize = sorterCommand.getStringsCount();
@@ -32,9 +32,5 @@ public class SorterApplication {
     } catch (InterruptedException ex) {
       // ignore
     }
-  }
-
-  private static int getThreadsCount(Integer threadsCount) {
-    return threadsCount != null ? threadsCount : Runtime.getRuntime().availableProcessors();
   }
 }
