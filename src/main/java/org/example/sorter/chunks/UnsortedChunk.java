@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import org.example.sorter.utils.FileHelper;
 import org.example.sorter.utils.StringHelper;
 
 public class UnsortedChunk extends AbstractChunk {
@@ -47,7 +48,7 @@ public class UnsortedChunk extends AbstractChunk {
           }
           writeData(stream, line, chars, bytes);
         } else {
-          writeInt(stream, value.length);
+          FileHelper.writeInt(stream, value.length);
           stream.write(value);
         }
       }
@@ -61,7 +62,7 @@ public class UnsortedChunk extends AbstractChunk {
   private void writeData(
       OutputStream stream, String line, char[] chars, byte[] bytes
   ) throws IOException {
-    writeInt(stream, 2 * line.length());
+    FileHelper.writeInt(stream, 2 * line.length());
 
     int count;
     int offset = 0;
@@ -69,12 +70,5 @@ public class UnsortedChunk extends AbstractChunk {
       offset += count;
       stream.write(bytes, 0, 2 * count);
     }
-  }
-
-  private void writeInt(OutputStream stream, int value) throws IOException {
-    stream.write((byte) ((value >>> 24) & 0xFF));
-    stream.write((byte) ((value >>> 16) & 0xFF));
-    stream.write((byte) ((value >>> 8) & 0xFF));
-    stream.write((byte) ((value >>> 0) & 0xFF));
   }
 }
