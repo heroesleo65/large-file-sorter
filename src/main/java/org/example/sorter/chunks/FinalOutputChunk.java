@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class FinalOutputChunk extends AbstractChunk {
   private final File outputFile;
   private final Charset charset;
@@ -40,7 +42,8 @@ public class FinalOutputChunk extends AbstractChunk {
         stream.write(newLineBytes);
       }
     } catch (IOException ex) {
-      // ignore
+      log.error(() -> "Can't save file '" + outputFile + "'", ex);
+      // TODO: add processing error
     }
 
     clear(/* dirty = */false);

@@ -4,9 +4,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import lombok.extern.log4j.Log4j2;
 import org.example.sorter.utils.FileHelper;
 import org.example.sorter.utils.StringHelper;
 
+@Log4j2
 public class UnsortedChunk extends AbstractChunk {
   private static final int DEFAULT_BUFFER_SIZE = 128;
 
@@ -53,7 +55,8 @@ public class UnsortedChunk extends AbstractChunk {
         }
       }
     } catch (IOException ex) {
-      // ignore
+      log.error(() -> "Can't save file '" + outputFile + "'", ex);
+      // TODO: add processing error
     }
 
     clear(/* dirty = */ false);
