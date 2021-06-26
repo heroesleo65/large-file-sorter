@@ -28,7 +28,8 @@ public class SorterArguments {
 
   @Option(
       names = {"--buffer-size"},
-      description = "buffer size for saving data (default: ${DEFAULT-VALUE})"
+      description = "buffer size for saving data. Ignored if reflection is enabled "
+          + "(default: ${DEFAULT-VALUE})"
   )
   private int bufferSize = 128;
 
