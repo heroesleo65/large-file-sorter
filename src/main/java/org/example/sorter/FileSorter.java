@@ -67,7 +67,7 @@ public class FileSorter implements Closeable {
 
       var outputFile = output.toFile();
       if (!FileHelper.safeDeleteFile(outputFile)) {
-        System.err.println("Can't delete old file");
+        System.err.println("Can't delete old file '" + output + "'");
         return;
       }
 
@@ -127,10 +127,11 @@ public class FileSorter implements Closeable {
         }
       }
     } catch (FileNotFoundException ex) {
-      System.err.println("Input file '" + input.toFile().getAbsolutePath() + "' not found");
+      System.err.println("Input file '" + input + "' not found");
       return 0;
     } catch (IOException ex) {
-      System.err.println("I/O exception");
+      log.error(() -> "Can't read data from file " + input, ex);
+      System.err.println("Unknown exception in reading file " + input);
       return 0;
     }
 
