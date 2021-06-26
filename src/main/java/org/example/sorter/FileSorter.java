@@ -2,6 +2,7 @@ package org.example.sorter;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -14,12 +15,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import me.tongfei.progressbar.ProgressBar;
 import org.example.sorter.chunks.FinalOutputChunk;
 import org.example.sorter.chunks.OutputSortedChunk;
 import org.example.sorter.chunks.TemporaryChunk;
 import org.example.sorter.chunks.UnsortedChunk;
 
+@Log4j2
 public class FileSorter implements Closeable {
 
   private final Path input;
@@ -63,11 +66,9 @@ public class FileSorter implements Closeable {
       }
 
       var outputFile = output.toFile();
-      if (outputFile.exists()) {
-        if (!outputFile.delete()) {
-          System.err.println("Can't delete old file");
-          return;
-        }
+      if (!FileHelper.safeDeleteFile(outputFile)) {
+        System.err.println("Can't delete old file");
+        return;
       }
 
       mergeChunks(
@@ -101,7 +102,9 @@ public class FileSorter implements Closeable {
     int chunkNumber = 0;
 
     workingChunks.incrementAndGet();
-    var chunk = new UnsortedChunk(getTemporaryFile(tempDirectory, chunkNumber++), chunkSize);
+    var chunk = new UnsortedChunk(
+        FileHelper.getTemporaryFile(tempDirectory, chunkNumber++), chunkSize
+    );
 
     var sortAndSaveAction = new SortAndSaveAction(workingChunks, progressBar);
 
@@ -117,10 +120,15 @@ public class FileSorter implements Closeable {
             readyChunks.offer(chunkNumber);
           }
 
-          chunk = new UnsortedChunk(getTemporaryFile(tempDirectory, chunkNumber++), chunkSize);
+          chunk = new UnsortedChunk(
+              FileHelper.getTemporaryFile(tempDirectory, chunkNumber++), chunkSize
+          );
           chunk.add(line);
         }
       }
+    } catch (FileNotFoundException ex) {
+      System.err.println("Input file '" + input.toFile().getAbsolutePath() + "' not found");
+      return 0;
     } catch (IOException ex) {
       System.err.println("I/O exception");
       return 0;
@@ -145,7 +153,7 @@ public class FileSorter implements Closeable {
       if (len >= 2 || (len == 1 && chunksCount == 1)) {
         var chunks = new TemporaryChunk[len];
         for (int i = 0; i < len; i++) {
-          var file = getTemporaryFile(tempDirectory, readyChunks.take() - 1);
+          var file = FileHelper.getTemporaryFile(tempDirectory, readyChunks.take() - 1);
           chunks[i] = new TemporaryChunk(file, chunkSize);
         }
 
@@ -154,7 +162,7 @@ public class FileSorter implements Closeable {
         Chunk chunk;
         if (chunksCount > 1) {
           chunk = new OutputSortedChunk(
-              getTemporaryFile(tempDirectory, chunkNumber++), chunkSize
+              FileHelper.getTemporaryFile(tempDirectory, chunkNumber++), chunkSize
           );
         } else {
           chunk = new FinalOutputChunk(output, charset, chunkSize);
@@ -168,10 +176,6 @@ public class FileSorter implements Closeable {
     } while (chunksCount > 1);
 
     progressBar.step();
-  }
-
-  private static File getTemporaryFile(File temporaryDirectory, int id) {
-    return new File(temporaryDirectory, Integer.toString(id));
   }
 
   @RequiredArgsConstructor

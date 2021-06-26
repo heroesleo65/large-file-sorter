@@ -1,28 +1,32 @@
 package org.example.sorter.chunks;
 
-import java.io.EOFException;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import lombok.extern.log4j.Log4j2;
+import org.example.sorter.FileHelper;
 import org.example.sorter.StringHelper;
 
+@Log4j2
 public class TemporaryChunk extends AbstractChunk {
   private final File inputFile;
   private long position;
+  private boolean fileExists;
 
   public TemporaryChunk(File inputFile, int chunkSize) {
     super(chunkSize);
     this.inputFile = inputFile;
+    this.fileExists = inputFile.exists();
   }
 
   @Override
   public String pop() {
     var result = super.pop();
-    if (result == null && inputFile.exists() && inputFile.isFile()) {
-      try {
-        inputFile.delete();
-      } catch (Exception ex) {
-        // ignore
+    if (result == null && fileExists) {
+      fileExists = false;
+      if (!FileHelper.safeDeleteFile(inputFile)) {
+        log.error("Can't delete file '{}'", inputFile.getAbsolutePath());
       }
     }
     return result;
@@ -30,7 +34,7 @@ public class TemporaryChunk extends AbstractChunk {
 
   @Override
   public boolean load() {
-    if (!inputFile.exists() || !inputFile.isFile()) {
+    if (!fileExists || !inputFile.exists() || !inputFile.isFile()) {
       return false;
     }
 
@@ -48,7 +52,7 @@ public class TemporaryChunk extends AbstractChunk {
           break;
         }
 
-        var len = readInt(file);
+        var len = FileHelper.readInt(file);
         if (len < 0) {
           break;
         }
@@ -64,6 +68,9 @@ public class TemporaryChunk extends AbstractChunk {
 
       position = file.getFilePointer();
       return true;
+    } catch (FileNotFoundException ex) {
+      fileExists = false;
+      return false;
     } catch (IOException ex) {
       position = Long.MAX_VALUE;
     }
@@ -74,13 +81,5 @@ public class TemporaryChunk extends AbstractChunk {
   @Override
   public void save() {
     throw new UnsupportedOperationException("Save is not supported");
-  }
-
-  private int readInt(RandomAccessFile file) throws IOException {
-    try {
-      return file.readInt();
-    } catch (EOFException ex) {
-      return -1;
-    }
   }
 }
