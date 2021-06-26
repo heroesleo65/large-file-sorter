@@ -7,6 +7,8 @@ import java.util.function.Supplier;
 
 public final class StringHelper {
 
+  private static final int MIN_SIZE_RADIX_SORT = 3;
+
   private static final String VALUE_OF_STRING_FIELD_NAME = "value";
   private static final String CODER_OF_STRING_FIELD_NAME = "coder";
 
@@ -101,7 +103,9 @@ public final class StringHelper {
       throw new ArrayIndexOutOfBoundsException(toIndex);
     }
 
-    if (fromIndex == toIndex) {
+    if (toIndex - fromIndex < MIN_SIZE_RADIX_SORT) {
+      // Sorting small counts of elements
+      Arrays.sort(values, fromIndex, toIndex, String::compareTo);
       return;
     }
 
