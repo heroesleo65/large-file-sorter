@@ -4,7 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.function.Supplier;
 
-public class StringHelper {
+public final class StringHelper {
 
   private static final String VALUE_OF_STRING_FIELD_NAME = "value";
   private static final String CODER_OF_STRING_FIELD_NAME = "coder";

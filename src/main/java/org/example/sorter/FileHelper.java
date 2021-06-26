@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-public class FileHelper {
+public final class FileHelper {
   private FileHelper() {
     throw new UnsupportedOperationException("FileHelper is utility");
   }

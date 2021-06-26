@@ -3,7 +3,7 @@ package org.example.sorter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 
-public class ReflectionHelper {
+public final class ReflectionHelper {
 
   private ReflectionHelper() {
     throw new UnsupportedOperationException("ReflectionHelper is utility");
