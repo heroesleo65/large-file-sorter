@@ -32,7 +32,7 @@ public abstract class AbstractChunk implements Chunk {
         return null;
       }
 
-      Arrays.fill(data, size, data.length, null);
+      Arrays.fill(data, size, data.length, null); // for GC
 
       if (size == 0) {
         return null;
@@ -55,7 +55,7 @@ public abstract class AbstractChunk implements Chunk {
     cursor = 0;
     size = 0;
     if (!dirty) {
-      Arrays.fill(data, null);
+      Arrays.fill(data, null); // for GC
     }
   }
 
@@ -69,7 +69,7 @@ public abstract class AbstractChunk implements Chunk {
 
   private String take(int position) {
     var result = data[position];
-    data[position] = null;
+    data[position] = null; // for GC
     return result;
   }
 }

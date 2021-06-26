@@ -12,7 +12,12 @@ public class ChunksMerger {
     var priorityQueue = new PriorityQueue<PriorityQueueItem>(chunks.length);
 
     for (int i = 0; i < chunks.length; i++) {
-      priorityQueue.add(new PriorityQueueItem(chunks[i].pop(), i));
+      var data = chunks[i].pop();
+      if (data != null) {
+        priorityQueue.add(new PriorityQueueItem(data, i));
+      } else {
+        chunks[i] = null; // for GC
+      }
     }
 
     while (!priorityQueue.isEmpty()) {
@@ -24,7 +29,7 @@ public class ChunksMerger {
         item.data = data;
         priorityQueue.add(item);
       } else {
-        chunks[item.index] = null;
+        chunks[item.index] = null; // for GC
       }
     }
 
