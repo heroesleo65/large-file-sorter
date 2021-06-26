@@ -2,6 +2,7 @@ package org.example.sorter.utils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.function.Supplier;
 
 public final class StringHelper {
@@ -83,6 +84,89 @@ public final class StringHelper {
 
   public static boolean hasSupportReflection() {
     return SUPPORT_REFLECTION;
+  }
+
+  public static void radixSort(String[] values, int fromIndex, int toIndex) {
+    if (fromIndex > toIndex) {
+      throw new IllegalArgumentException(
+          "fromIndex(" + fromIndex + ") > toIndex(" + toIndex + ")"
+      );
+    }
+
+    if (fromIndex < 0) {
+      throw new ArrayIndexOutOfBoundsException(fromIndex);
+    }
+
+    if (toIndex > values.length) {
+      throw new ArrayIndexOutOfBoundsException(toIndex);
+    }
+
+    if (fromIndex == toIndex) {
+      return;
+    }
+
+    int maxLen = getMaxLength(values, fromIndex, toIndex);
+
+    int from = fromIndex;
+    int to = toIndex;
+    for (int i = 0; i < maxLen; i++) {
+      int position = i;
+
+      do {
+        Arrays.sort(values, from, to, (a, b) -> {
+          if (position >= a.length()) {
+            return position < b.length() ? -1 : 0;
+          }
+          if (position >= b.length()) {
+            return 1;
+          }
+          return a.charAt(position) - b.charAt(position);
+        });
+
+        from = skipSmallString(values, to, toIndex, i - 1);
+        to = getNextIndexNotEqualsToChar(values, from, toIndex, i - 1);
+      } while (to <= toIndex);
+
+      from = skipSmallString(values, fromIndex, toIndex, i);
+      to = getNextIndexNotEqualsToChar(values, from, toIndex, i);
+    }
+  }
+
+  private static int skipSmallString(String[] values, int fromIndex, int toIndex, int position) {
+    int result = fromIndex;
+    while (result < toIndex && values[result].length() <= position) {
+      result++;
+    }
+    return result;
+  }
+
+  private static int getNextIndexNotEqualsToChar(
+      String[] values, int fromIndex, int toIndex, int position
+  ) {
+    int result = fromIndex + 1;
+    if (result >= toIndex) {
+      return result;
+    }
+
+    char symbol = values[fromIndex].charAt(position);
+    while (result < toIndex && position < values[result].length()) {
+      if (values[result].charAt(position) != symbol) {
+        break;
+      }
+      result++;
+    }
+
+    return result;
+  }
+
+  private static int getMaxLength(String[] values, int fromIndex, int toIndex) {
+    int result = values[fromIndex].length();
+    for (int i = fromIndex + 1; i < toIndex; i++) {
+      if (result < values[i].length()) {
+        result = values[i].length();
+      }
+    }
+    return result;
   }
 
   public static byte[] getValueArray(String value) {

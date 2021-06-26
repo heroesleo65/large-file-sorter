@@ -2,6 +2,7 @@ package org.example.sorter.chunks;
 
 import java.util.Arrays;
 import org.example.sorter.Chunk;
+import org.example.sorter.utils.StringHelper;
 
 public abstract class AbstractChunk implements Chunk {
   private static final String[] EMPTY = new String[0];
@@ -18,7 +19,7 @@ public abstract class AbstractChunk implements Chunk {
 
   @Override
   public void sort() {
-    Arrays.sort(data, cursor, size, String::compareTo);
+    StringHelper.radixSort(data, cursor, size);
   }
 
   @Override
