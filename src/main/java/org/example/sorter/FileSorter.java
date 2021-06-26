@@ -21,6 +21,7 @@ import org.example.sorter.chunks.FinalOutputChunk;
 import org.example.sorter.chunks.OutputSortedChunk;
 import org.example.sorter.chunks.TemporaryChunk;
 import org.example.sorter.chunks.UnsortedChunk;
+import org.example.sorter.utils.FileHelper;
 
 @Log4j2
 public class FileSorter implements Closeable {

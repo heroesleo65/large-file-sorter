@@ -1,4 +1,4 @@
-package org.example.sorter;
+package org.example.sorter.utils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

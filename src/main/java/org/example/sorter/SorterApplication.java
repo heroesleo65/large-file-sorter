@@ -1,5 +1,6 @@
 package org.example.sorter;
 
+import org.example.sorter.utils.StringHelper;
 import picocli.CommandLine;
 
 public class SorterApplication {

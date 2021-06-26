@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import org.example.sorter.StringHelper;
+import org.example.sorter.utils.StringHelper;
 
 public class UnsortedChunk extends AbstractChunk {
   private static final int DEFAULT_BUFFER_SIZE = 128;
