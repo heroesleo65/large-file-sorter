@@ -10,25 +10,25 @@ import org.example.sorter.utils.StringHelper;
 
 @Log4j2
 public class TemporaryChunk extends AbstractChunk {
+  private static final int DELETE_ON_EXIT_ATTRIBUTE = 0x01;
+  private static final int LOADED_FILE_ATTRIBUTE = 0x02;
+
   private final File inputFile;
   private long position;
-  private boolean fileExists;
+
+  private byte attributes = DELETE_ON_EXIT_ATTRIBUTE;
 
   public TemporaryChunk(File inputFile, int chunkSize) {
     super(chunkSize);
     this.inputFile = inputFile;
-    this.fileExists = true;
   }
 
   @Override
   public String pop() {
     var result = super.pop();
-    if (result == null && fileExists) {
-      // Clean: remove all temporary files
-      fileExists = false;
-      if (!FileHelper.safeDeleteFile(inputFile)) {
-        log.error("Can't delete file '{}'", inputFile.getAbsolutePath());
-      }
+    if (result == null) {
+      setLoadedFile();
+      deleteTemporaryFile();
     }
     return result;
   }
@@ -74,7 +74,8 @@ public class TemporaryChunk extends AbstractChunk {
       return true;
     } catch (FileNotFoundException ex) {
       log.error("File '{}' was removed", inputFile);
-      return (fileExists = false);
+      setDeleteOnExit(false); // We don't delete not own file
+      setLoadedFile();
     } catch (IOException ex) {
       log.error(() -> "Can't load file '" + inputFile + "'", ex);
       position = Long.MAX_VALUE;
@@ -88,21 +89,51 @@ public class TemporaryChunk extends AbstractChunk {
     throw new UnsupportedOperationException("Save is not supported");
   }
 
+  public void setDeleteOnExit(boolean value) {
+    if (value) {
+      attributes |= DELETE_ON_EXIT_ATTRIBUTE;
+    } else {
+      attributes &= ~DELETE_ON_EXIT_ATTRIBUTE;
+    }
+  }
+
+  private boolean isDeleteOnExit() {
+    return (attributes & DELETE_ON_EXIT_ATTRIBUTE) != 0;
+  }
+
+  private boolean isLoadedFile() {
+    return (attributes & LOADED_FILE_ATTRIBUTE) != 0;
+  }
+
+  private void setLoadedFile() {
+    attributes |= LOADED_FILE_ATTRIBUTE;
+  }
+
   private boolean hasAccessToFile() {
-    if (!fileExists) {
+    if (isLoadedFile()) {
       return false;
     }
 
     if (!inputFile.isFile()) {
       log.error("File for chunks '{}' is not file", inputFile);
-      return (fileExists = false);
+      setLoadedFile();
+      return false;
     }
 
     if (!inputFile.canRead()) {
       log.error("User don't has read access to file '{}'", inputFile);
-      return (fileExists = false);
+      setLoadedFile();
+      return false;
     }
 
     return true;
+  }
+
+  private void deleteTemporaryFile() {
+    if (isDeleteOnExit()) {
+      if (!FileHelper.safeDeleteFile(inputFile)) {
+        log.error("Can't delete file '{}'", inputFile);
+      }
+    }
   }
 }
