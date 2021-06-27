@@ -2,10 +2,10 @@ package org.example.sorter;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -130,12 +130,12 @@ public class FileSorter implements Closeable {
           chunk.add(line);
         }
       }
-    } catch (FileNotFoundException ex) {
+    } catch (NoSuchFileException ex) {
       System.err.println("Input file '" + input + "' not found");
       return 0;
     } catch (IOException ex) {
-      log.error(() -> "Can't read data from file " + input, ex);
-      System.err.println("Unknown exception in reading file " + input);
+      log.error(() -> "Can't read data from file '" + input + "'", ex);
+      System.err.println("Unknown exception in reading file '" + input + "'");
       return 0;
     }
 
