@@ -58,7 +58,7 @@ public class FileSorter implements Closeable {
     var workingChunks = new AtomicInteger(0);
     BlockingQueue<Integer> readyChunks = new LinkedBlockingQueue<>();
 
-    try (var progressBar = new ProgressBar("Sorting", 0)) {
+    try (var progressBar = new ProgressBar("Sorting", -1)) {
       int chunksCount = sortChunks(
           tempDirectory, readyChunks, workingChunks, chunkParameters, progressBar
       );
@@ -150,7 +150,7 @@ public class FileSorter implements Closeable {
   ) throws InterruptedException {
 
     var chunkNumber = chunksCount;
-    progressBar.maxHint(progressBar.getMax() + chunksCount);
+    progressBar.maxHint(2L * chunksCount);
 
     do {
       var len = Integer.min(
@@ -193,8 +193,6 @@ public class FileSorter implements Closeable {
 
     @Override
     public void accept(Chunk chunk) {
-      progressBar.maxHint(progressBar.getMax() + 1);
-
       chunk.sort();
       chunk.save();
       counter.decrementAndGet();
