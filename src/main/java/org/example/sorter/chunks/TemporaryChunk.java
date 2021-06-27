@@ -17,13 +17,14 @@ public class TemporaryChunk extends AbstractChunk {
   public TemporaryChunk(File inputFile, int chunkSize) {
     super(chunkSize);
     this.inputFile = inputFile;
-    this.fileExists = inputFile.exists();
+    this.fileExists = true;
   }
 
   @Override
   public String pop() {
     var result = super.pop();
     if (result == null && fileExists) {
+      // Clean: remove all temporary files
       fileExists = false;
       if (!FileHelper.safeDeleteFile(inputFile)) {
         log.error("Can't delete file '{}'", inputFile.getAbsolutePath());
@@ -34,7 +35,7 @@ public class TemporaryChunk extends AbstractChunk {
 
   @Override
   public boolean load() {
-    if (!fileExists || !inputFile.exists() || !inputFile.isFile()) {
+    if (!hasAccessToFile()) {
       return false;
     }
 
@@ -46,7 +47,7 @@ public class TemporaryChunk extends AbstractChunk {
 
       var values = new byte[0];
       var builder = new StringBuilder(0);
-      for (int i = 0; i < data.length; i++) {
+      for (int i = getCurrentCursor(); i < data.length; i++) {
         int coder = file.read();
         if (coder < 0) {
           break;
@@ -54,9 +55,12 @@ public class TemporaryChunk extends AbstractChunk {
 
         var len = FileHelper.readInt(file);
         if (len < 0) {
+          log.error("Unexpected end of file '{}'", inputFile);
+          // TODO: add processing
           break;
         }
 
+        // TODO: add comments for explanation
         if (StringHelper.hasSupportReflection() || values.length < len) {
           values = new byte[len];
         }
@@ -69,9 +73,10 @@ public class TemporaryChunk extends AbstractChunk {
       position = file.getFilePointer();
       return true;
     } catch (FileNotFoundException ex) {
-      fileExists = false;
-      return false;
+      log.error("File '{}' was removed", inputFile);
+      return (fileExists = false);
     } catch (IOException ex) {
+      log.error(() -> "Can't load file '" + inputFile + "'", ex);
       position = Long.MAX_VALUE;
     }
 
@@ -81,5 +86,23 @@ public class TemporaryChunk extends AbstractChunk {
   @Override
   public void save() {
     throw new UnsupportedOperationException("Save is not supported");
+  }
+
+  private boolean hasAccessToFile() {
+    if (!fileExists) {
+      return false;
+    }
+
+    if (!inputFile.isFile()) {
+      log.error("File for chunks '{}' is not file", inputFile);
+      return (fileExists = false);
+    }
+
+    if (!inputFile.canRead()) {
+      log.error("User don't has read access to file '{}'", inputFile);
+      return (fileExists = false);
+    }
+
+    return true;
   }
 }

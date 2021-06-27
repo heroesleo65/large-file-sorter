@@ -60,6 +60,10 @@ public abstract class AbstractChunk implements Chunk {
     return size;
   }
 
+  protected int getCurrentCursor() {
+    return cursor;
+  }
+
   protected void uncheckedAdd(String line) {
     data[size++] = line;
   }
