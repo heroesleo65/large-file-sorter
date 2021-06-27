@@ -1,10 +1,12 @@
 package org.example.sorter.chunks;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
+import org.example.sorter.FileOutputStreamFactory;
+import org.example.sorter.OutputStreamFactory;
 
 @Log4j2
 public class FinalOutputChunk extends AbstractChunk {
@@ -12,11 +14,15 @@ public class FinalOutputChunk extends AbstractChunk {
   private final Charset charset;
   private final byte[] newLineBytes;
 
+  @Setter
+  private OutputStreamFactory outputStreamFactory;
+
   public FinalOutputChunk(File outputFile, Charset charset, int chunkSize) {
     super(chunkSize);
     this.outputFile = outputFile;
     this.charset = charset;
     this.newLineBytes = System.lineSeparator().getBytes(charset);
+    this.outputStreamFactory = FileOutputStreamFactory.getInstance();
   }
 
   @Override
@@ -35,7 +41,7 @@ public class FinalOutputChunk extends AbstractChunk {
 
   @Override
   public void save() {
-    try (var stream = new FileOutputStream(outputFile, true)) {
+    try (var stream = outputStreamFactory.get(outputFile)) {
       for (int i = 0; i < getCurrentSize(); i++) {
         var bytes = data[i].getBytes(charset);
         stream.write(bytes);

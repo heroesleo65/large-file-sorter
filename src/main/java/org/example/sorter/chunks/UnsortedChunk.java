@@ -1,10 +1,12 @@
 package org.example.sorter.chunks;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
+import org.example.sorter.FileOutputStreamFactory;
+import org.example.sorter.OutputStreamFactory;
 import org.example.sorter.utils.FileHelper;
 import org.example.sorter.utils.StringHelper;
 
@@ -15,6 +17,9 @@ public class UnsortedChunk extends AbstractChunk {
   private final File outputFile;
   private final int bufferSize;
 
+  @Setter
+  private OutputStreamFactory outputStreamFactory;
+
   public UnsortedChunk(File outputFile, int chunkSize) {
     this(outputFile, chunkSize, DEFAULT_BUFFER_SIZE);
   }
@@ -23,6 +28,7 @@ public class UnsortedChunk extends AbstractChunk {
     super(chunkSize);
     this.outputFile = outputFile;
     this.bufferSize = bufferSize;
+    this.outputStreamFactory = FileOutputStreamFactory.getInstance();
   }
 
   @Override
@@ -34,7 +40,7 @@ public class UnsortedChunk extends AbstractChunk {
   public void save() {
     char[] chars = null;
     byte[] bytes = null;
-    try (var stream = new FileOutputStream(outputFile, true)) {
+    try (var stream = outputStreamFactory.get(outputFile)) {
       for (int i = 0; i < getCurrentSize(); i++) {
         var line = data[i];
 
