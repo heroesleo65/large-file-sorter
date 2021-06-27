@@ -5,7 +5,6 @@ import org.example.sorter.Chunk;
 import org.example.sorter.utils.StringHelper;
 
 public abstract class AbstractChunk implements Chunk {
-  private static final String[] EMPTY = new String[0];
 
   protected String[] data;
   private int cursor;
@@ -28,14 +27,11 @@ public abstract class AbstractChunk implements Chunk {
       cursor = 0;
       size = 0;
 
-      if (!load()) {
-        data = EMPTY;
-        return null;
-      }
+      var loaded = load();
 
       Arrays.fill(data, size, data.length, null); // for GC
 
-      if (size == 0) {
+      if (!loaded || size == 0) {
         return null;
       }
     }
