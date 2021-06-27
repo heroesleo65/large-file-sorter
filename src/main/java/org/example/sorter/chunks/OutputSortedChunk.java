@@ -8,6 +8,10 @@ public class OutputSortedChunk extends UnsortedChunk {
     super(outputFile, chunkSize);
   }
 
+  public OutputSortedChunk(File outputFile, int chunkSize, int bufferSize) {
+    super(outputFile, chunkSize, bufferSize);
+  }
+
   @Override
   public boolean add(String line) {
     if (!super.add(line)) {

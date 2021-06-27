@@ -40,10 +40,8 @@ public class FileSorter implements Closeable {
     this.executor = Executors.newFixedThreadPool(threadsCount);
   }
 
-  public void sort(
-      int availableChunks, int chunkSize, int bufferSize, Path output
-  ) throws InterruptedException {
-    if (availableChunks < 3) {
+  public void sort(ChunkParameters chunkParameters, Path output) throws InterruptedException {
+    if (chunkParameters.getAvailableChunks() < 3) {
       throw new IllegalArgumentException("availableChunks must be greater than three");
     }
 
@@ -62,8 +60,7 @@ public class FileSorter implements Closeable {
 
     try (var progressBar = new ProgressBar("Sorting", 0)) {
       int chunksCount = sortChunks(
-          tempDirectory, readyChunks, workingChunks,
-          availableChunks, chunkSize, bufferSize, progressBar
+          tempDirectory, readyChunks, workingChunks, chunkParameters, progressBar
       );
       if (chunksCount <= 0) {
         return;
@@ -77,7 +74,7 @@ public class FileSorter implements Closeable {
 
       mergeChunks(
           tempDirectory, readyChunks, workingChunks,
-          chunksCount, availableChunks, chunkSize, outputFile, progressBar
+          chunksCount, chunkParameters, outputFile, progressBar
       );
     }
   }
@@ -101,13 +98,14 @@ public class FileSorter implements Closeable {
 
   private int sortChunks(
       File tempDirectory, BlockingQueue<Integer> readyChunks, AtomicInteger workingChunks,
-      int availableChunks, int chunkSize, int bufferSize, ProgressBar progressBar
+      ChunkParameters chunkParameters, ProgressBar progressBar
   ) {
     int chunkNumber = 0;
 
     workingChunks.incrementAndGet();
     var chunk = new UnsortedChunk(
-        FileHelper.getTemporaryFile(tempDirectory, chunkNumber++), chunkSize, bufferSize
+        FileHelper.getTemporaryFile(tempDirectory, chunkNumber++),
+        chunkParameters.getChunkSize(), chunkParameters.getBufferSize()
     );
 
     var sortAndSaveAction = new SortAndSaveAction(workingChunks, progressBar);
@@ -117,7 +115,7 @@ public class FileSorter implements Closeable {
 
       while ((line = bufferedReader.readLine()) != null) {
         if (!chunk.add(line)) {
-          if (workingChunks.incrementAndGet() < availableChunks) {
+          if (workingChunks.incrementAndGet() < chunkParameters.getAvailableChunks()) {
             executor.submit(new AsyncTask<>(sortAndSaveAction, chunk, readyChunks, chunkNumber));
           } else {
             sortAndSaveAction.accept(chunk);
@@ -125,7 +123,8 @@ public class FileSorter implements Closeable {
           }
 
           chunk = new UnsortedChunk(
-              FileHelper.getTemporaryFile(tempDirectory, chunkNumber++), chunkSize, bufferSize
+              FileHelper.getTemporaryFile(tempDirectory, chunkNumber++),
+              chunkParameters.getChunkSize(), chunkParameters.getBufferSize()
           );
           chunk.add(line);
         }
@@ -147,19 +146,21 @@ public class FileSorter implements Closeable {
 
   private void mergeChunks(
       File tempDirectory, BlockingQueue<Integer> readyChunks, AtomicInteger workingChunks,
-      int chunksCount, int availableChunks, int chunkSize, File output, ProgressBar progressBar
+      int chunksCount, ChunkParameters chunkParameters, File output, ProgressBar progressBar
   ) throws InterruptedException {
 
     var chunkNumber = chunksCount;
     progressBar.maxHint(progressBar.getMax() + chunksCount);
 
     do {
-      var len = Integer.min(chunksCount, availableChunks - 1 - workingChunks.get());
+      var len = Integer.min(
+          chunksCount, chunkParameters.getAvailableChunks() - 1 - workingChunks.get()
+      );
       if (len >= 2 || (len == 1 && chunksCount == 1)) {
         var chunks = new TemporaryChunk[len];
         for (int i = 0; i < len; i++) {
           var file = FileHelper.getTemporaryFile(tempDirectory, readyChunks.take() - 1);
-          chunks[i] = new TemporaryChunk(file, chunkSize);
+          chunks[i] = new TemporaryChunk(file, chunkParameters.getChunkSize());
         }
 
         chunksCount -= len - 1;
@@ -167,10 +168,11 @@ public class FileSorter implements Closeable {
         Chunk chunk;
         if (chunksCount > 1) {
           chunk = new OutputSortedChunk(
-              FileHelper.getTemporaryFile(tempDirectory, chunkNumber++), chunkSize
+              FileHelper.getTemporaryFile(tempDirectory, chunkNumber++),
+              chunkParameters.getChunkSize(), chunkParameters.getBufferSize()
           );
         } else {
-          chunk = new FinalOutputChunk(output, charset, chunkSize);
+          chunk = new FinalOutputChunk(output, charset, chunkParameters.getChunkSize());
         }
 
         var merger = new ChunksMerger(chunk);
