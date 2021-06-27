@@ -1,0 +1,22 @@
+Configuration:
+  status: OFF
+  name: LargeFileSorter
+  appenders:
+    Console:
+      name: STDOUT
+      target: SYSTEM_OUT
+      PatternLayout:
+        Pattern: "%m%n"
+    File:
+      name: File
+      fileName: 'large-file-sorter.logs'
+      PatternLayout:
+        Pattern: "%d %p %C{1.} [%t] %m%n"
+      Filters:
+        ThresholdFilter:
+          level: error
+  Loggers:
+    Root:
+      level: OFF
+      AppenderRef:
+        ref: File
