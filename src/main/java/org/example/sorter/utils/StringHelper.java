@@ -2,7 +2,9 @@ package org.example.sorter.utils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.function.Supplier;
 
 public final class StringHelper {
@@ -109,32 +111,22 @@ public final class StringHelper {
       return;
     }
 
-    int maxLen = getMaxLength(values, fromIndex, toIndex);
-    if (maxLen == 0) {
-      // All elements are empty
-      return;
-    }
+    // TODO: add comments for explanation
+    Deque<Long> buckets = new ArrayDeque<>();
+    buckets.add(NumberHelper.getLong(fromIndex, toIndex));
 
-    // Sorting strings by first symbol
-    Arrays.sort(values, fromIndex, toIndex, (a, b) -> {
-      if (a.isEmpty()) {
-        return b.isEmpty() ? 0 : -1;
-      }
-      if (b.isEmpty()) {
-        return 1;
-      }
-      return a.charAt(0) - b.charAt(0);
-    });
+    for (int length = 0; !buckets.isEmpty(); length++) {
+      int position = length; // for lambda function
 
-    // Sorting strings by another symbols
-    int from, to;
-    for (int i = 1; i < maxLen; i++) {
-      int position = i;
+      long lastValue = buckets.peekLast();
+      long value;
+      do {
+        //noinspection ConstantConditions
+        value = buckets.pollFirst(); // value always exists
 
-      from = getIndexOfStringWithLengthGreaterThan(values, fromIndex, toIndex, i - 1);
-      to = getNextIndexNotEqualsToChar(values, from, toIndex, i - 1);
+        int from = NumberHelper.getHiInt(value);
+        int to = NumberHelper.getLowInt(value);
 
-      while (to <= toIndex) {
         Arrays.sort(values, from, to, (a, b) -> {
           if (position >= a.length()) {
             return position < b.length() ? -1 : 0;
@@ -145,49 +137,23 @@ public final class StringHelper {
           return a.charAt(position) - b.charAt(position);
         });
 
-        from = getIndexOfStringWithLengthGreaterThan(values, to, toIndex, i - 1);
-        to = getNextIndexNotEqualsToChar(values, from, toIndex, i - 1);
-      }
+        int prev = from;
+        while (prev < to && values[prev].length() <= position) {
+          prev++;
+        }
+        for (int i = prev + 1; i < to; i++) {
+          if (values[i].charAt(position) != values[prev].charAt(position)) {
+            if (i - prev > 1) {
+              buckets.addLast(NumberHelper.getLong(prev, i));
+            }
+            prev = i;
+          }
+        }
+        if (to - prev > 1) {
+          buckets.addLast(NumberHelper.getLong(prev, to));
+        }
+      } while (lastValue != value);
     }
-  }
-
-  private static int getIndexOfStringWithLengthGreaterThan(
-      String[] values, int fromIndex, int toIndex, int length
-  ) {
-    int result = fromIndex;
-    while (result < toIndex && values[result].length() <= length) {
-      result++;
-    }
-    return result;
-  }
-
-  private static int getNextIndexNotEqualsToChar(
-      String[] values, int fromIndex, int toIndex, int position
-  ) {
-    int result = fromIndex + 1;
-    if (result >= toIndex) {
-      return result;
-    }
-
-    char symbol = values[fromIndex].charAt(position);
-    while (result < toIndex && position < values[result].length()) {
-      if (values[result].charAt(position) != symbol) {
-        break;
-      }
-      result++;
-    }
-
-    return result;
-  }
-
-  private static int getMaxLength(String[] values, int fromIndex, int toIndex) {
-    int result = values[fromIndex].length();
-    for (int i = fromIndex + 1; i < toIndex; i++) {
-      if (result < values[i].length()) {
-        result = values[i].length();
-      }
-    }
-    return result;
   }
 
   public static byte[] getValueArray(String value) {
