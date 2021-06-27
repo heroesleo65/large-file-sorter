@@ -1,4 +1,4 @@
-package org.example.sorter.utils;
+package org.example.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

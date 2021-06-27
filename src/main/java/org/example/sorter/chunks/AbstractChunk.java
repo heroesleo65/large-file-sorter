@@ -2,7 +2,7 @@ package org.example.sorter.chunks;
 
 import java.util.Arrays;
 import org.example.sorter.Chunk;
-import org.example.sorter.utils.StringHelper;
+import org.example.utils.StringHelper;
 
 public abstract class AbstractChunk implements Chunk {
 

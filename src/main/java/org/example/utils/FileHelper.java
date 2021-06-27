@@ -1,4 +1,4 @@
-package org.example.sorter.utils;
+package org.example.utils;
 
 import java.io.EOFException;
 import java.io.File;

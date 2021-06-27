@@ -7,8 +7,8 @@ import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.example.sorter.FileOutputStreamFactory;
 import org.example.sorter.OutputStreamFactory;
-import org.example.sorter.utils.FileHelper;
-import org.example.sorter.utils.StringHelper;
+import org.example.utils.FileHelper;
+import org.example.utils.StringHelper;
 
 @Log4j2
 public class UnsortedChunk extends AbstractChunk {

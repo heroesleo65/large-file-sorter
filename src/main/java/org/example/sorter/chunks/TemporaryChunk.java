@@ -5,8 +5,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import lombok.extern.log4j.Log4j2;
-import org.example.sorter.utils.FileHelper;
-import org.example.sorter.utils.StringHelper;
+import org.example.utils.FileHelper;
+import org.example.utils.StringHelper;
 
 @Log4j2
 public class TemporaryChunk extends AbstractChunk {

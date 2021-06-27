@@ -1,4 +1,4 @@
-package org.example.sorter.utils;
+package org.example.utils;
 
 public final class NumberHelper {
 
