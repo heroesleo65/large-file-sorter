@@ -7,7 +7,13 @@ public class SorterApplication {
   public static void main(String[] args) {
     var sorterCommand = new SorterArguments();
     var commandLine = new CommandLine(sorterCommand);
-    commandLine.parseArgs(args);
+
+    try {
+      commandLine.parseArgs(args);
+    } catch (Exception ex) {
+      commandLine.usage(System.out);
+      return;
+    }
 
     if (commandLine.isUsageHelpRequested()) {
       commandLine.usage(System.out);
