@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ProgressBar implements AutoCloseable {
   private final ProgressState progressState;
+  private final ProgressBarConsumer progressConsumer;
   private final ProgressBarUpdateAction updateAction;
   private final ScheduledFuture<?> scheduledTask;
 
@@ -21,8 +22,9 @@ public class ProgressBar implements AutoCloseable {
       ScheduledExecutorService scheduledExecutorService
   ) {
     this.progressState = new ProgressState(task, initialMax, processed, elapsed);
+    this.progressConsumer = consumer;
 
-    this.updateAction = new ProgressBarUpdateAction(progressState, renderer, consumer);
+    this.updateAction = new ProgressBarUpdateAction(progressState, renderer, progressConsumer);
     this.scheduledTask = scheduledExecutorService.scheduleWithFixedDelay(
         updateAction, 0, updateIntervalMillis, TimeUnit.MILLISECONDS
     );
@@ -32,7 +34,7 @@ public class ProgressBar implements AutoCloseable {
   public void close() {
     scheduledTask.cancel(false);
     updateAction.run();
-    progressState.pause();
+    progressConsumer.close();
   }
 
   /**
