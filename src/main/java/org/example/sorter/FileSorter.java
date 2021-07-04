@@ -11,17 +11,19 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import me.tongfei.progressbar.ProgressBar;
+import org.example.progressbar.ProgressBar;
+import org.example.progressbar.ProgressBarGroup;
 import org.example.sorter.chunks.FinalOutputChunk;
 import org.example.sorter.chunks.OutputSortedChunk;
 import org.example.sorter.chunks.TemporaryChunk;
 import org.example.sorter.chunks.UnsortedChunk;
+import org.example.utils.ExecutorHelper;
 import org.example.utils.FileHelper;
+import org.jline.terminal.TerminalBuilder;
 
 @Log4j2
 public class FileSorter implements Closeable {
@@ -58,7 +60,13 @@ public class FileSorter implements Closeable {
     var workingChunks = new AtomicInteger(0);
     BlockingQueue<Integer> readyChunks = new LinkedBlockingQueue<>();
 
-    try (var progressBar = new ProgressBar("Sorting", -1)) {
+    try (
+        var terminal = TerminalBuilder.builder().dumb(true).build();
+        var progressBarGroup = new ProgressBarGroup(terminal)
+    ) {
+      var progressBar = progressBarGroup.createProgressBar(
+          /* task = */ "Sorting...", /* initialMax = */ -1
+      );
       int chunksCount = sortChunks(
           tempDirectory, readyChunks, workingChunks, chunkParameters, progressBar
       );
@@ -76,23 +84,16 @@ public class FileSorter implements Closeable {
           tempDirectory, readyChunks, workingChunks,
           chunksCount, chunkParameters, outputFile, progressBar
       );
+    } catch (IOException ex) {
+      log.error("This should never happen! Dumb terminal should have been created.", ex);
+      System.err.println("This should never happen! Dumb terminal should have been created.");
     }
   }
 
   @Override
   public void close() {
-    executor.shutdown();
-
-    try {
-      if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
-        executor.shutdownNow();
-        if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
-          log.error("Executor in FileSorter did not terminate");
-        }
-      }
-    } catch (InterruptedException e) {
-      executor.shutdownNow();
-      Thread.currentThread().interrupt();
+    if (!ExecutorHelper.close(executor)) {
+      log.error("Executor in FileSorter did not terminate");
     }
   }
 

@@ -157,42 +157,6 @@ public final class StringHelper {
     }
   }
 
-  public static String repeat(char c, int n) {
-    if (n <= 0) {
-      return "";
-    }
-
-    return String.valueOf(c).repeat(n);
-  }
-
-  public static StringBuilder repeat(StringBuilder builder, char c, int n) {
-    if (n <= 0) {
-      return builder;
-    }
-
-    builder.ensureCapacity(builder.capacity() + n);
-    for (int i = 0; i < n; i++) {
-      builder.append(c);
-    }
-
-    return builder;
-  }
-
-  public static String formatDuration(Duration d) {
-    long seconds = d.getSeconds();
-
-    var builder = new StringBuilder(10).append(seconds / 3600).append(':');
-    formatTime(builder, (seconds % 3600) / 60).append(':');
-    return formatTime(builder, seconds % 60).toString();
-  }
-
-  public static StringBuilder formatTime(StringBuilder builder, long value) {
-    if (value < 10) {
-      builder.append('0');
-    }
-    return builder.append(value);
-  }
-
   public static byte[] getValueArray(String value) {
     if (value == null) {
       return new byte[0];
