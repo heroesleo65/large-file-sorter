@@ -28,11 +28,13 @@ public class InteractiveConsoleProgressBarConsumer extends ConsoleProgressBarCon
 
   @Override
   public void accept(String str) {
-    var builder = firstTimeAccept.compareAndSet(false, true)
-        ? createFirstPrintBuilder(str)
-        : createUsuallyPrintBuilder(str, position.get());
-
-    out.println(builder);
+    if (firstTimeAccept.compareAndSet(false, true)) {
+      var builder = createFirstPrintBuilder(str);
+      out.println(builder);
+    } else {
+      var builder = createUsuallyPrintBuilder(str, position.get());
+      out.print(builder);
+    }
   }
 
   private StringBuilder createFirstPrintBuilder(String str) {
