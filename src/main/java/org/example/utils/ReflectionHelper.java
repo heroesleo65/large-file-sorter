@@ -14,7 +14,7 @@ public final class ReflectionHelper {
       var field = clazz.getDeclaredField(name);
       field.setAccessible(true);
       return field;
-    } catch (NoSuchFieldException ex) {
+    } catch (Exception ex) {
       return null;
     }
   }
@@ -24,7 +24,7 @@ public final class ReflectionHelper {
       var constructor = clazz.getDeclaredConstructor(parameterTypes);
       constructor.setAccessible(true);
       return constructor;
-    } catch (NoSuchMethodException ex) {
+    } catch (Exception ex) {
       return null;
     }
   }
