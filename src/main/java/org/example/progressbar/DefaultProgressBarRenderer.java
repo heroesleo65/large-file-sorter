@@ -23,6 +23,10 @@ public class DefaultProgressBarRenderer implements ProgressBarRenderer {
 
   @Override
   public String render(ProgressState progress, int maxLength) {
+    if (maxLength <= 0) {
+      return "";
+    }
+
     var now = Instant.now();
     var startInstant = progress.getStartInstant();
     var extraMessage = progress.getExtraMessage();
@@ -98,7 +102,12 @@ public class DefaultProgressBarRenderer implements ProgressBarRenderer {
     if (current >= max) {
       return length;
     }
-    return (int) (length * current / max);
+
+    if (current < Integer.MAX_VALUE) { // check on overflow
+      return (int) (length * current / max);
+    } else {
+      return (int) (length * ((double) current / max));
+    }
   }
 
   private int progressFractionalPart(long current, long max, int length) {
@@ -106,8 +115,14 @@ public class DefaultProgressBarRenderer implements ProgressBarRenderer {
       return 0;
     }
 
-    // TODO: add comments for description
-    return (int) (length * current % max * style.getFractionSymbols().length() / max);
+    if (current < Integer.MAX_VALUE && max < Integer.MAX_VALUE) { // check on overflow
+      // TODO: add comments for description
+      return (int) (length * current % max * style.getFractionSymbols().length() / max);
+    } else {
+      double p = length * ((double) current / max);
+      double fraction = (p - Math.floor(p)) * style.getFractionSymbols().length();
+      return (int) Math.floor(fraction);
+    }
   }
 
   private void appendSpeed(StringBuilder builder, long start, long current, Duration elapsed) {

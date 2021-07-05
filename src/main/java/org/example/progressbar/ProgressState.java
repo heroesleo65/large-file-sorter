@@ -2,7 +2,6 @@ package org.example.progressbar;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.Getter;
 import lombok.Setter;
@@ -46,10 +45,6 @@ public class ProgressState {
     this.paused = false;
   }
 
-  public boolean isIndefinite() {
-    return max < 0;
-  }
-
   public long getCurrent() {
     return current.get();
   }
@@ -63,7 +58,7 @@ public class ProgressState {
   }
 
   public void stepTo(long n) {
-    current.set(n);
+    current.set(n > 0 ? n : 0);
   }
 
   public synchronized void pause() {
