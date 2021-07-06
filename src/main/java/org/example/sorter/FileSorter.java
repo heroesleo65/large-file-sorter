@@ -12,7 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
+import java.util.function.ObjIntConsumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.example.progressbar.ProgressBar;
@@ -109,7 +109,7 @@ public class FileSorter implements Closeable {
         chunkParameters.getChunkSize(), chunkParameters.getBufferSize()
     );
 
-    var sortAndSaveAction = new SortAndSaveAction(workingChunks, progressBar);
+    var sortAndSaveAction = new SortAndSaveAction(workingChunks, progressBar, readyChunks);
 
     try (var bufferedReader = Files.newBufferedReader(input, charset)) {
       String line;
@@ -117,10 +117,9 @@ public class FileSorter implements Closeable {
       while ((line = bufferedReader.readLine()) != null) {
         if (!chunk.add(line)) {
           if (workingChunks.incrementAndGet() < chunkParameters.getAvailableChunks()) {
-            executor.submit(new AsyncTask<>(sortAndSaveAction, chunk, readyChunks, chunkNumber));
+            executor.submit(new AsyncTask<>(sortAndSaveAction, chunk, chunkNumber));
           } else {
-            sortAndSaveAction.accept(chunk);
-            readyChunks.offer(chunkNumber);
+            sortAndSaveAction.accept(chunk, chunkNumber);
           }
 
           chunk = new UnsortedChunk(
@@ -139,8 +138,7 @@ public class FileSorter implements Closeable {
       return 0;
     }
 
-    sortAndSaveAction.accept(chunk);
-    readyChunks.offer(chunkNumber);
+    sortAndSaveAction.accept(chunk, chunkNumber);
 
     return chunkNumber;
   }
@@ -187,16 +185,19 @@ public class FileSorter implements Closeable {
   }
 
   @RequiredArgsConstructor
-  private static class SortAndSaveAction implements Consumer<Chunk> {
+  private static class SortAndSaveAction implements ObjIntConsumer<Chunk> {
 
     private final AtomicInteger counter;
     private final ProgressBar progressBar;
+    private final BlockingQueue<Integer> queue;
 
     @Override
-    public void accept(Chunk chunk) {
+    public void accept(Chunk chunk, int number) {
       chunk.sort();
       chunk.save();
+
       counter.decrementAndGet();
+      queue.offer(number);
 
       progressBar.step();
     }
@@ -205,15 +206,13 @@ public class FileSorter implements Closeable {
   @RequiredArgsConstructor
   private static class AsyncTask<T> implements Runnable {
 
-    private final Consumer<T> action;
+    private final ObjIntConsumer<T> action;
     private final T object;
-    private final BlockingQueue<Integer> queue;
     private final int value;
 
     @Override
     public void run() {
-      action.accept(object);
-      queue.offer(value);
+      action.accept(object, value);
     }
   }
 }
