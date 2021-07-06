@@ -20,7 +20,7 @@ public class ChunksMerger {
       }
     }
 
-    while (!priorityQueue.isEmpty()) {
+    while (priorityQueue.size() > 1) {
       var item = priorityQueue.poll();
       outputChunk.add(item.data);
 
@@ -31,6 +31,19 @@ public class ChunksMerger {
       } else {
         chunks[item.index] = null; // for GC
       }
+    }
+
+    if (!priorityQueue.isEmpty()) {
+      var item = priorityQueue.poll();
+
+      var data = item.data;
+      item.data = null; // for GC
+      do {
+        outputChunk.add(data);
+        data = chunks[item.index].pop();
+      } while (data != null);
+
+      chunks[item.index] = null; // for GC
     }
 
     outputChunk.save();
