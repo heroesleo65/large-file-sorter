@@ -28,9 +28,12 @@ import org.jline.terminal.TerminalBuilder;
 @Log4j2
 public class FileSorter implements Closeable {
 
+  private static final int MIN_CHUNK_COUNTS_FOR_MERGE = 3;
+
   private final Path input;
   private final Charset charset;
   private final ExecutorService executor;
+  private final int threadsCount;
 
   public FileSorter(Path input, Charset charset, int threadsCount) {
     if (threadsCount < 1) {
@@ -39,11 +42,12 @@ public class FileSorter implements Closeable {
 
     this.input = input;
     this.charset = charset;
+    this.threadsCount = threadsCount;
     this.executor = Executors.newFixedThreadPool(threadsCount);
   }
 
   public void sort(ChunkParameters chunkParameters, Path output) throws InterruptedException {
-    if (chunkParameters.getAvailableChunks() < 3) {
+    if (chunkParameters.getAvailableChunks() < MIN_CHUNK_COUNTS_FOR_MERGE) {
       throw new IllegalArgumentException("availableChunks must be greater than or equal to three");
     }
 
@@ -148,40 +152,135 @@ public class FileSorter implements Closeable {
       int chunksCount, ChunkParameters chunkParameters, File output, ProgressBar progressBar
   ) throws InterruptedException {
 
+    var remainingChunks = chunksCount;
     var chunkNumber = chunksCount;
     progressBar.maxHint(2L * chunksCount);
 
+    int allowableChunks = chunkParameters.getAvailableChunks();
+    int availableChunksPerThread = Math.min(
+        Math.max(allowableChunks / threadsCount + 1, MIN_CHUNK_COUNTS_FOR_MERGE),
+        allowableChunks
+    );
+
+    Runnable counterDecrementByAvailableAction = () ->
+        workingChunks.addAndGet(-availableChunksPerThread);
+    Runnable counterDecrementByAllowableAction = () ->
+        workingChunks.addAndGet(-allowableChunks);
+
     do {
-      var len = Integer.min(
-          chunksCount, chunkParameters.getAvailableChunks() - 1 - workingChunks.get()
-      );
-      if (len >= 2 || (len == 1 && chunksCount == 1)) {
-        var chunks = new TemporaryChunk[len];
-        for (int i = 0; i < len; i++) {
-          var file = FileHelper.getTemporaryFile(tempDirectory, readyChunks.take() - 1);
-          chunks[i] = new TemporaryChunk(file, chunkParameters.getChunkSize());
+      int currentWorkingChunks = workingChunks.addAndGet(availableChunksPerThread);
+      if (currentWorkingChunks < allowableChunks) {
+        int chunksForMerging = availableChunksPerThread - 1;
+        Runnable counterDecrementAction = counterDecrementByAvailableAction;
+
+        if (allowableChunks > remainingChunks) {
+          int diffChunks = allowableChunks - availableChunksPerThread;
+          if (workingChunks.addAndGet(diffChunks) < allowableChunks) {
+            chunksForMerging = remainingChunks;
+            counterDecrementAction = counterDecrementByAllowableAction;
+          } else {
+            workingChunks.addAndGet(- diffChunks);
+          }
         }
 
-        chunksCount -= len - 1;
+        remainingChunks -= chunksForMerging - 1;
 
-        Chunk chunk;
-        if (chunksCount > 1) {
-          chunk = new OutputSortedChunk(
-              FileHelper.getTemporaryFile(tempDirectory, chunkNumber++),
-              chunkParameters.getChunkSize(), chunkParameters.getBufferSize()
-          );
+        var action = new MergeChunksAction(
+            tempDirectory,
+            readyChunks,
+            getTemporaryChunks(tempDirectory, chunkParameters, readyChunks, chunksForMerging),
+            remainingChunks,
+            chunkNumber++,
+            output,
+            charset,
+            chunkParameters,
+            counterDecrementAction,
+            progressBar
+        );
+
+        if (remainingChunks > 1) {
+          executor.submit(action);
         } else {
-          chunk = new FinalOutputChunk(output, charset, chunkParameters.getChunkSize());
+          action.run();
         }
+      } else {
+        var availableChunks = allowableChunks - (currentWorkingChunks - availableChunksPerThread);
+        if (availableChunks > 1) {
+          var chunksForMerging = Integer.min(remainingChunks, availableChunks - 1);
+          remainingChunks -= chunksForMerging - 1;
 
-        var merger = new ChunksMerger(chunk);
-        merger.merge(chunks);
-        readyChunks.offer(chunkNumber);
-        progressBar.stepBy(len - 1);
+          var action = new MergeChunksAction(
+              tempDirectory,
+              readyChunks,
+              getTemporaryChunks(tempDirectory, chunkParameters, readyChunks, chunksForMerging),
+              remainingChunks,
+              chunkNumber++,
+              output,
+              charset,
+              chunkParameters,
+              counterDecrementByAvailableAction,
+              progressBar
+          );
+
+          action.run();
+        } else {
+          counterDecrementByAvailableAction.run();
+        }
       }
-    } while (chunksCount > 1);
+    } while (remainingChunks > 1);
 
     progressBar.step();
+  }
+
+  private TemporaryChunk[] getTemporaryChunks(
+      File tempDirectory, ChunkParameters chunkParameters, BlockingQueue<Integer> queue, int count
+  ) throws InterruptedException {
+    var chunks = new TemporaryChunk[count];
+    for (int i = 0; i < count; i++) {
+      var file = FileHelper.getTemporaryFile(tempDirectory, queue.take() - 1);
+      chunks[i] = new TemporaryChunk(file, chunkParameters.getChunkSize());
+    }
+
+    return chunks;
+  }
+
+  @RequiredArgsConstructor
+  private static class MergeChunksAction implements Runnable {
+
+    private final File tempDirectory;
+    private final BlockingQueue<Integer> queue;
+    private final TemporaryChunk[] chunks;
+    private final int remainingChunks;
+    private final int chunkNumber;
+    private final File output;
+    private final Charset charset;
+    private final ChunkParameters chunkParameters;
+    private final Runnable counterAction;
+    private final ProgressBar progressBar;
+
+    @Override
+    public void run() {
+      Chunk outputChunk;
+      if (remainingChunks == 1) {
+        outputChunk = new FinalOutputChunk(output, charset, chunkParameters.getChunkSize());
+      } else {
+        outputChunk = new OutputSortedChunk(
+            FileHelper.getTemporaryFile(tempDirectory, chunkNumber),
+            chunkParameters.getChunkSize(), chunkParameters.getBufferSize()
+        );
+      }
+
+      var merger = new ChunksMerger(outputChunk);
+      merger.merge(chunks);
+
+      counterAction.run();
+
+      if (remainingChunks != 1) {
+        queue.offer(chunkNumber + 1);
+      }
+
+      progressBar.stepBy(chunks.length - 1);
+    }
   }
 
   @RequiredArgsConstructor
