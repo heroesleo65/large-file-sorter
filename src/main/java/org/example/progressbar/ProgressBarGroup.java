@@ -84,7 +84,7 @@ public class ProgressBarGroup implements AutoCloseable {
     progressBarConsumerFactory.clear();
 
     if (!ExecutorHelper.close(executor)) {
-      log.error("ScheduledExecutor in ProgressBar did not terminate");
+      log.error("ScheduledExecutor in ProgressBarGroup did not terminate");
     }
   }
 }
