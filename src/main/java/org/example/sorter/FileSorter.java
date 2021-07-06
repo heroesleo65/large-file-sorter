@@ -44,7 +44,7 @@ public class FileSorter implements Closeable {
 
   public void sort(ChunkParameters chunkParameters, Path output) throws InterruptedException {
     if (chunkParameters.getAvailableChunks() < 3) {
-      throw new IllegalArgumentException("availableChunks must be greater than three");
+      throw new IllegalArgumentException("availableChunks must be greater than or equal to three");
     }
 
     File tempDirectory;
