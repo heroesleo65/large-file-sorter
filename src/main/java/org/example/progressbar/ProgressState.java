@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 public class ProgressState {
@@ -68,7 +67,9 @@ public class ProgressState {
 
   public void stepTo(long n) {
     var oldValue = current.getAndSet(n > 0 ? n : 0);
-    speedDelta.addAndGet(n - oldValue);
+    if (n > oldValue) {
+      speedDelta.addAndGet(n - oldValue);
+    }
   }
 
   public Duration getEta() {
@@ -201,17 +202,20 @@ public class ProgressState {
     }
   }
 
-  @RequiredArgsConstructor
   private static class CurrentProgressSpeed implements ProgressSpeed {
     private final long timeInSeconds;
     private final long progress;
 
+    public CurrentProgressSpeed(long timeInSeconds, long progress) {
+      assert timeInSeconds != 0;
+
+      this.timeInSeconds = timeInSeconds;
+      this.progress = progress;
+    }
+
     @Override
     public double getSpeed() {
-      if (progress == 0 || timeInSeconds == 0) {
-        return 0;
-      }
-      return (double) progress / timeInSeconds;
+      return progress != 0 ? (double) progress / timeInSeconds : 0;
     }
 
     @Override
@@ -220,11 +224,9 @@ public class ProgressState {
         return Duration.ZERO;
       }
 
-      if (progress == 0 || timeInSeconds == 0) {
-        return null;
-      }
-
-      return ProgressSpeed.getEta(remainingProgress, timeInSeconds, progress);
+      return progress != 0
+          ? ProgressSpeed.getEta(remainingProgress, timeInSeconds, progress)
+          : null;
     }
   }
 }
