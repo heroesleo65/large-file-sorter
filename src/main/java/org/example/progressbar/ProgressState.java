@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 public class ProgressState {
@@ -15,34 +16,41 @@ public class ProgressState {
   @Getter
   private volatile String extraMessage;
 
-  //  0             start     current        max
-  //  [===============|=========>             ]
   @Getter
-  private volatile long start;
+  private volatile boolean paused;
+
   private final AtomicLong current;
 
   @Getter
   private volatile long max;
 
-  @Getter
-  private volatile Instant startInstant;
-  private Duration elapsedBeforeStart;
+  private volatile Instant processInstant;
+  private volatile Instant speedInstant;
 
-  @Getter
-  private volatile boolean paused;
+  private volatile Duration processElapsed;
+  private volatile Duration speedElapsed;
 
-  public ProgressState(
-      String taskName, long initialMax, long startFrom, Duration elapsedBeforeStart
-  ) {
+  private volatile ProgressSpeed speed;
+  private final AtomicLong speedDelta;
+
+  private final Object lock = new Object();
+
+  public ProgressState(String taskName, long initialMax, long startFrom) {
     this.taskName = taskName;
     this.max = initialMax;
-    this.start = startFrom;
     this.current = new AtomicLong(startFrom);
-    this.elapsedBeforeStart = elapsedBeforeStart;
 
     this.extraMessage = "";
-    this.startInstant = Instant.now();
     this.paused = false;
+
+    this.processElapsed = Duration.ZERO;
+    this.speedElapsed = Duration.ZERO;
+
+    this.processInstant = Instant.now();
+    this.speedInstant = this.processInstant;
+
+    this.speed = new AvgProgressSpeed();
+    this.speedDelta = new AtomicLong(0L);
   }
 
   public long getCurrent() {
@@ -55,24 +63,183 @@ public class ProgressState {
 
   public void stepBy(long n) {
     current.addAndGet(n);
+    speedDelta.addAndGet(n);
   }
 
   public void stepTo(long n) {
-    current.set(n > 0 ? n : 0);
+    var oldValue = current.getAndSet(n > 0 ? n : 0);
+    speedDelta.addAndGet(n - oldValue);
   }
 
-  public synchronized void pause() {
+  public Duration getEta() {
+    long max = this.max;
+    if (max < 0) {
+      return null;
+    }
+
+    long leftUntilComplete = max - current.get();
+    if (leftUntilComplete <= 0) {
+      return Duration.ZERO;
+    }
+
+    var currentSpeed = this.speed;
+    var elapsed = this.speedElapsed;
+    var instant = this.speedInstant;
+
     if (!paused) {
-      paused = true;
-      start = current.get();
-      elapsedBeforeStart = elapsedBeforeStart.plus(Duration.between(startInstant, Instant.now()));
+      elapsed = elapsed.plus(Duration.between(instant, Instant.now()));
+    }
+
+    long elapsedSeconds = elapsed.toSeconds();
+    if (elapsedSeconds < 10L) {
+      return currentSpeed.getEta(leftUntilComplete);
+    }
+
+    synchronized (lock) {
+      speedElapsed = Duration.ZERO;
+      speedInstant = Instant.now();
+    }
+
+    currentSpeed = new CurrentProgressSpeed(elapsedSeconds, speedDelta.getAndSet(0L));
+    speed = currentSpeed;
+    return currentSpeed.getEta(leftUntilComplete);
+  }
+
+  public double getSpeed() {
+    var currentSpeed = this.speed;
+    var elapsed = this.speedElapsed;
+    var instant = this.speedInstant;
+    var delta = this.speedDelta.get();
+
+    if (!paused) {
+      elapsed = elapsed.plus(Duration.between(instant, Instant.now()));
+    }
+
+    long elapsedSeconds = elapsed.toSeconds();
+    if (elapsedSeconds == 0) {
+      return currentSpeed.getSpeed();
+    }
+
+    return delta > 0 ? (double) delta / elapsedSeconds : 0;
+  }
+
+  public Duration getDuration() {
+    var elapsed = this.processElapsed;
+    var instant = this.processInstant;
+    if (!paused) {
+      elapsed = elapsed.plus(Duration.between(instant, Instant.now()));
+    }
+    return elapsed;
+  }
+
+  public void pause() {
+    if (!paused) {
+      synchronized (lock) {
+        if (!paused) {
+          paused = true;
+
+          var now = Instant.now();
+          speedElapsed = speedElapsed.plus(Duration.between(speedInstant, now));
+          processElapsed = processElapsed.plus(Duration.between(processInstant, now));
+        }
+      }
     }
   }
 
-  public synchronized void resume() {
+  public void resume() {
     if (paused) {
-      paused = false;
-      startInstant = Instant.now();
+      synchronized (lock) {
+        if (paused) {
+          paused = false;
+
+          processInstant = Instant.now();
+          speedInstant = processInstant;
+        }
+      }
+    }
+  }
+
+  private interface ProgressSpeed {
+    double getSpeed();
+    Duration getEta(long leftProgress);
+
+    static Duration getEta(long leftProgress, long elapsedSeconds, long progress) {
+      if (leftProgress < Long.MAX_VALUE / elapsedSeconds) { // check on overflow
+        return Duration.ofSeconds(elapsedSeconds * leftProgress / progress);
+      }
+
+      double speed = (double) progress / elapsedSeconds;
+      return speed != 0 ? Duration.ofSeconds((long) (leftProgress / speed)) : null;
+    }
+  }
+
+  private class AvgProgressSpeed implements ProgressSpeed {
+
+    @Override
+    public double getSpeed() {
+      var delta = ProgressState.this.speedDelta.get();
+      if (delta <= 0) {
+        return 0;
+      }
+
+      var elapsed = ProgressState.this.processElapsed;
+      var instant = ProgressState.this.processInstant;
+
+      if (!ProgressState.this.paused) {
+        elapsed = elapsed.plus(Duration.between(instant, Instant.now()));
+      }
+
+      long elapsedSeconds = elapsed.toSeconds();
+      return elapsedSeconds != 0 ? (double) delta / elapsedSeconds : 0;
+    }
+
+    @Override
+    public Duration getEta(long leftProgress) {
+      var delta = ProgressState.this.speedDelta.get();
+      if (delta <= 0) {
+        return null;
+      }
+
+      var elapsed = ProgressState.this.processElapsed;
+      var instant = ProgressState.this.processInstant;
+
+      if (!ProgressState.this.paused) {
+        elapsed = elapsed.plus(Duration.between(instant, Instant.now()));
+      }
+
+      long elapsedSeconds = elapsed.toSeconds();
+      if (elapsedSeconds == 0) {
+        return null;
+      }
+
+      return ProgressSpeed.getEta(leftProgress, elapsedSeconds, delta);
+    }
+  }
+
+  @RequiredArgsConstructor
+  private static class CurrentProgressSpeed implements ProgressSpeed {
+    private final long timeInSeconds;
+    private final long progress;
+
+    @Override
+    public double getSpeed() {
+      if (progress == 0 || timeInSeconds == 0) {
+        return 0;
+      }
+      return (double) progress / timeInSeconds;
+    }
+
+    @Override
+    public Duration getEta(long leftProgress) {
+      if (leftProgress <= 0) {
+        return Duration.ZERO;
+      }
+
+      if (progress == 0 || timeInSeconds == 0) {
+        return null;
+      }
+
+      return ProgressSpeed.getEta(leftProgress, timeInSeconds, progress);
     }
   }
 }

@@ -1,8 +1,6 @@
 package org.example.progressbar;
 
 import java.text.DecimalFormat;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -27,17 +25,15 @@ public class DefaultProgressBarRenderer implements ProgressBarRenderer {
       return "";
     }
 
-    var now = Instant.now();
-    var startInstant = progress.getStartInstant();
+    var duration = progress.getDuration();
     var extraMessage = progress.getExtraMessage();
-    var start = progress.getStart();
     var current = progress.getCurrent();
     var max = progress.getMax();
+    var eta = progress.getEta();
+    var speed = progress.getSpeed();
     if (max >= 0 && max < current) {
       max = current;
     }
-
-    var elapsed = Duration.between(startInstant, now);
 
     var result = new StringBuilder(maxLength)
         .append(progress.getTaskName())
@@ -56,13 +52,13 @@ public class DefaultProgressBarRenderer implements ProgressBarRenderer {
           .append(' ')
           .appendRatio(current, max, unitSize, unitName)
           .append(" (")
-          .appendFormatDuration(elapsed)
+          .appendFormatDuration(duration)
           .append(" / ")
-          .appendEta(start, current, max, elapsed)
+          .appendEta(eta)
           .append(") ");
 
       if (isSpeedShown) {
-        appendSpeed(suffix, start, current, elapsed);
+        appendSpeed(suffix, speed);
       }
 
       suffix.append(extraMessage);
@@ -125,31 +121,28 @@ public class DefaultProgressBarRenderer implements ProgressBarRenderer {
     }
   }
 
-  private void appendSpeed(StringBuilder builder, long start, long current, Duration elapsed) {
+  private void appendSpeed(StringBuilder builder, double speed) {
     String suffix = "/s";
-    double elapsedSeconds = elapsed.getSeconds();
-    double elapsedInUnit = elapsedSeconds;
     if (speedUnit != null) {
       switch (speedUnit) {
         case MINUTES:
           suffix = "/min";
-          elapsedInUnit /= 60;
+          speed /= 60;
           break;
         case HOURS:
           suffix = "/h";
-          elapsedInUnit /= (60 * 60);
+          speed /= (60 * 60);
           break;
         case DAYS:
           suffix = "/d";
-          elapsedInUnit /= (60 * 60 * 24);
+          speed /= (60 * 60 * 24);
           break;
       }
     }
 
-    if (elapsedSeconds == 0) {
+    if (speed == 0) {
       builder.append('?');
     } else {
-      double speed = (double) (current - start) / elapsedInUnit;
       builder.append(speedFormat.format(speed / unitSize));
     }
     builder.append(unitName).append(suffix);

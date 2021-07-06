@@ -1,6 +1,5 @@
 package org.example.progressbar;
 
-import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -16,12 +15,11 @@ public class ProgressBar implements AutoCloseable {
       long initialMax,
       int updateIntervalMillis,
       long processed,
-      Duration elapsed,
       ProgressBarRenderer renderer,
       ProgressBarConsumer consumer,
       ScheduledExecutorService scheduledExecutorService
   ) {
-    this.progressState = new ProgressState(task, initialMax, processed, elapsed);
+    this.progressState = new ProgressState(task, initialMax, processed);
     this.progressConsumer = consumer;
 
     this.updateAction = new ProgressBarUpdateAction(progressState, renderer, progressConsumer);

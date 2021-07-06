@@ -2,7 +2,6 @@ package org.example.progressbar;
 
 import java.io.PrintStream;
 import java.text.DecimalFormat;
-import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -44,8 +43,7 @@ public class ProgressBarGroup implements AutoCloseable {
         /* showSpeed = */ false,
         /* speedFormat = */ null,
         /* speedUnit = */ ChronoUnit.SECONDS,
-        /* processed = */ 0L,
-        /* elapsed = */ Duration.ZERO
+        /* processed = */ 0L
     );
   }
 
@@ -60,8 +58,7 @@ public class ProgressBarGroup implements AutoCloseable {
       boolean showSpeed,
       DecimalFormat speedFormat,
       ChronoUnit speedUnit,
-      long processed,
-      Duration elapsed
+      long processed
   ) {
     var render = new DefaultProgressBarRenderer(
         style, unitName, unitSize, showSpeed, speedFormat, speedUnit
@@ -69,7 +66,7 @@ public class ProgressBarGroup implements AutoCloseable {
     var consumer = progressBarConsumerFactory.createConsoleConsumer(os);
 
     var progressBar = new ProgressBar(
-        task, initialMax, updateIntervalMillis, processed, elapsed, render, consumer, executor
+        task, initialMax, updateIntervalMillis, processed, render, consumer, executor
     );
     progressBars.add(progressBar);
     return progressBar;

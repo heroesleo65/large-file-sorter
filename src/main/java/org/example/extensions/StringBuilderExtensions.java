@@ -28,15 +28,12 @@ public final class StringBuilderExtensions {
         .append('%');
   }
 
-  public static StringBuilder appendEta(
-      StringBuilder builder, long start, long current, long max, Duration elapsed
-  ) {
-    if (max <= 0 || current == start) {
+  public static StringBuilder appendEta(StringBuilder builder, Duration eta) {
+    if (eta == null) {
       return builder.append('?');
     }
-    return appendFormatDuration(
-        builder, elapsed.dividedBy(current - start).multipliedBy(max - current)
-    );
+
+    return appendFormatDuration(builder, eta);
   }
 
   public static StringBuilder appendRatio(
