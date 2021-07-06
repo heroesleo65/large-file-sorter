@@ -77,8 +77,8 @@ public class ProgressState {
       return null;
     }
 
-    long leftUntilComplete = max - current.get();
-    if (leftUntilComplete <= 0) {
+    long remainingProgress = max - current.get();
+    if (remainingProgress <= 0) {
       return Duration.ZERO;
     }
 
@@ -92,7 +92,7 @@ public class ProgressState {
 
     long elapsedSeconds = elapsed.toSeconds();
     if (elapsedSeconds < 10L) {
-      return currentSpeed.getEta(leftUntilComplete);
+      return currentSpeed.getEta(remainingProgress);
     }
 
     synchronized (lock) {
@@ -102,7 +102,7 @@ public class ProgressState {
 
     currentSpeed = new CurrentProgressSpeed(elapsedSeconds, speedDelta.getAndSet(0L));
     speed = currentSpeed;
-    return currentSpeed.getEta(leftUntilComplete);
+    return currentSpeed.getEta(remainingProgress);
   }
 
   public double getSpeed() {
@@ -161,15 +161,15 @@ public class ProgressState {
 
   private interface ProgressSpeed {
     double getSpeed();
-    Duration getEta(long leftProgress);
+    Duration getEta(long remainingProgress);
 
-    static Duration getEta(long leftProgress, long elapsedSeconds, long progress) {
-      if (leftProgress < Long.MAX_VALUE / elapsedSeconds) { // check on overflow
-        return Duration.ofSeconds(elapsedSeconds * leftProgress / progress);
+    static Duration getEta(long remainingProgress, long elapsedSeconds, long progress) {
+      if (remainingProgress < Long.MAX_VALUE / elapsedSeconds) { // check on overflow
+        return Duration.ofSeconds(elapsedSeconds * remainingProgress / progress);
       }
 
       double speed = (double) progress / elapsedSeconds;
-      return speed != 0 ? Duration.ofSeconds((long) (leftProgress / speed)) : null;
+      return speed != 0 ? Duration.ofSeconds((long) (remainingProgress / speed)) : null;
     }
   }
 
@@ -194,7 +194,7 @@ public class ProgressState {
     }
 
     @Override
-    public Duration getEta(long leftProgress) {
+    public Duration getEta(long remainingProgress) {
       var delta = ProgressState.this.speedDelta.get();
       if (delta <= 0) {
         return null;
@@ -212,7 +212,7 @@ public class ProgressState {
         return null;
       }
 
-      return ProgressSpeed.getEta(leftProgress, elapsedSeconds, delta);
+      return ProgressSpeed.getEta(remainingProgress, elapsedSeconds, delta);
     }
   }
 
@@ -230,8 +230,8 @@ public class ProgressState {
     }
 
     @Override
-    public Duration getEta(long leftProgress) {
-      if (leftProgress <= 0) {
+    public Duration getEta(long remainingProgress) {
+      if (remainingProgress <= 0) {
         return Duration.ZERO;
       }
 
@@ -239,7 +239,7 @@ public class ProgressState {
         return null;
       }
 
-      return ProgressSpeed.getEta(leftProgress, timeInSeconds, progress);
+      return ProgressSpeed.getEta(remainingProgress, timeInSeconds, progress);
     }
   }
 }
