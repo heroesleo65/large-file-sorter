@@ -162,10 +162,8 @@ public class FileSorter implements Closeable {
         allowableChunks
     );
 
-    Runnable counterDecrementByAvailableAction = () ->
-        workingChunks.addAndGet(-availableChunksPerThread);
-    Runnable counterDecrementByAllowableAction = () ->
-        workingChunks.addAndGet(-allowableChunks);
+    Runnable counterDecrementByAvailableAction =
+        () -> workingChunks.addAndGet(-availableChunksPerThread);
 
     do {
       int currentWorkingChunks = workingChunks.addAndGet(availableChunksPerThread);
@@ -174,10 +172,12 @@ public class FileSorter implements Closeable {
         Runnable counterDecrementAction = counterDecrementByAvailableAction;
 
         if (allowableChunks > remainingChunks) {
-          int diffChunks = allowableChunks - availableChunksPerThread;
-          if (workingChunks.addAndGet(diffChunks) < allowableChunks) {
+          int diffChunks = remainingChunks - availableChunksPerThread;
+          if (diffChunks <= 0) {
             chunksForMerging = remainingChunks;
-            counterDecrementAction = counterDecrementByAllowableAction;
+          } else if (workingChunks.addAndGet(diffChunks) < allowableChunks) {
+            chunksForMerging = remainingChunks;
+            counterDecrementAction = () -> {};
           } else {
             workingChunks.addAndGet(- diffChunks);
           }
