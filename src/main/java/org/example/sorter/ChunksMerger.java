@@ -22,9 +22,16 @@ public class ChunksMerger {
 
     while (priorityQueue.size() > 1) {
       var item = priorityQueue.poll();
-      outputChunk.add(item.data);
 
-      var data = chunks[item.index].pop();
+      // priorityQueue.peek() can't be null because priorityQueue.size() > 0
+      //noinspection ConstantConditions
+      var nextString = priorityQueue.peek().data;
+      var data = item.data;
+      do {
+        outputChunk.add(data);
+        data = chunks[item.index].pop();
+      } while (data != null && data.compareTo(nextString) < 0);
+
       if (data != null) {
         item.data = data;
         priorityQueue.add(item);
