@@ -83,12 +83,7 @@ public class ProgressState {
     }
 
     var currentSpeed = this.speed;
-    var elapsed = this.speedElapsed;
-    var instant = this.speedInstant;
-
-    if (!paused) {
-      elapsed = elapsed.plus(Duration.between(instant, Instant.now()));
-    }
+    var elapsed = getElapsed(speedElapsed, speedInstant, paused);
 
     long elapsedSeconds = elapsed.toSeconds();
     if (elapsedSeconds < 10L) {
@@ -107,13 +102,8 @@ public class ProgressState {
 
   public double getSpeed() {
     var currentSpeed = this.speed;
-    var elapsed = this.speedElapsed;
-    var instant = this.speedInstant;
     var delta = this.speedDelta.get();
-
-    if (!paused) {
-      elapsed = elapsed.plus(Duration.between(instant, Instant.now()));
-    }
+    var elapsed = getElapsed(speedElapsed, speedInstant, paused);
 
     long elapsedSeconds = elapsed.toSeconds();
     if (elapsedSeconds == 0) {
@@ -124,12 +114,7 @@ public class ProgressState {
   }
 
   public Duration getDuration() {
-    var elapsed = this.processElapsed;
-    var instant = this.processInstant;
-    if (!paused) {
-      elapsed = elapsed.plus(Duration.between(instant, Instant.now()));
-    }
-    return elapsed;
+    return getElapsed(processElapsed, processInstant, paused);
   }
 
   public void pause() {
@@ -159,6 +144,10 @@ public class ProgressState {
     }
   }
 
+  private static Duration getElapsed(Duration elapsed, Instant instant, boolean paused) {
+    return paused ? elapsed : elapsed.plus(Duration.between(instant, Instant.now()));
+  }
+
   private interface ProgressSpeed {
     double getSpeed();
     Duration getEta(long remainingProgress);
@@ -182,12 +171,11 @@ public class ProgressState {
         return 0;
       }
 
-      var elapsed = ProgressState.this.processElapsed;
-      var instant = ProgressState.this.processInstant;
-
-      if (!ProgressState.this.paused) {
-        elapsed = elapsed.plus(Duration.between(instant, Instant.now()));
-      }
+      var elapsed = ProgressState.getElapsed(
+          ProgressState.this.processElapsed,
+          ProgressState.this.processInstant,
+          ProgressState.this.paused
+      );
 
       long elapsedSeconds = elapsed.toSeconds();
       return elapsedSeconds != 0 ? (double) delta / elapsedSeconds : 0;
@@ -200,19 +188,16 @@ public class ProgressState {
         return null;
       }
 
-      var elapsed = ProgressState.this.processElapsed;
-      var instant = ProgressState.this.processInstant;
-
-      if (!ProgressState.this.paused) {
-        elapsed = elapsed.plus(Duration.between(instant, Instant.now()));
-      }
+      var elapsed = ProgressState.getElapsed(
+          ProgressState.this.processElapsed,
+          ProgressState.this.processInstant,
+          ProgressState.this.paused
+      );
 
       long elapsedSeconds = elapsed.toSeconds();
-      if (elapsedSeconds == 0) {
-        return null;
-      }
-
-      return ProgressSpeed.getEta(remainingProgress, elapsedSeconds, delta);
+      return elapsedSeconds != 0
+          ? ProgressSpeed.getEta(remainingProgress, elapsedSeconds, delta)
+          : null;
     }
   }
 
