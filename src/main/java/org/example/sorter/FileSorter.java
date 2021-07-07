@@ -177,9 +177,10 @@ public class FileSorter implements Closeable {
             chunksForMerging = remainingChunks;
           } else if (workingChunks.addAndGet(diffChunks) < allowableChunks) {
             chunksForMerging = remainingChunks;
-            counterDecrementAction = () -> {};
+            counterDecrementAction = () -> {
+            };
           } else {
-            workingChunks.addAndGet(- diffChunks);
+            workingChunks.addAndGet(-diffChunks);
           }
         }
 
