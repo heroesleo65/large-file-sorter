@@ -3,8 +3,10 @@ package org.example.sorter.chunks;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.RandomAccessFile;
+import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
+import org.example.sorter.io.FileOutputStreamFactory;
+import org.example.sorter.io.OutputStreamFactory;
 import org.example.utils.FileHelper;
 import org.example.utils.StringHelper;
 
@@ -18,9 +20,13 @@ public class TemporaryChunk extends AbstractChunk {
 
   private byte attributes = DELETE_ON_EXIT_ATTRIBUTE;
 
+  @Setter
+  private OutputStreamFactory outputStreamFactory;
+
   public TemporaryChunk(File inputFile, int chunkSize) {
     super(chunkSize);
     this.inputFile = inputFile;
+    this.outputStreamFactory = FileOutputStreamFactory.getInstance();
   }
 
   @Override
@@ -39,7 +45,7 @@ public class TemporaryChunk extends AbstractChunk {
       return false;
     }
 
-    try (var file = new RandomAccessFile(inputFile, "r")) {
+    try (var file = outputStreamFactory.getRandomAccessOutputStream(inputFile)) {
       if (position >= file.length()) {
         return false;
       }

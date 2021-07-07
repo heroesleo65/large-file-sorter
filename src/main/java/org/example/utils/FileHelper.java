@@ -4,7 +4,7 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
+import org.example.sorter.io.RandomAccessOutputStream;
 
 public final class FileHelper {
   private FileHelper() {
@@ -31,9 +31,9 @@ public final class FileHelper {
     return new File(temporaryDirectory, Integer.toString(id));
   }
 
-  public static int readInt(RandomAccessFile file) throws IOException {
+  public static int readInt(RandomAccessOutputStream stream) throws IOException {
     try {
-      return file.readInt();
+      return stream.readInt();
     } catch (EOFException ex) {
       return -1;
     }

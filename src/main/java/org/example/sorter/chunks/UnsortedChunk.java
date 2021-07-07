@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
-import org.example.sorter.FileOutputStreamFactory;
-import org.example.sorter.OutputStreamFactory;
+import org.example.sorter.io.FileOutputStreamFactory;
+import org.example.sorter.io.OutputStreamFactory;
 import org.example.utils.FileHelper;
 import org.example.utils.StringHelper;
 
@@ -40,7 +40,7 @@ public class UnsortedChunk extends AbstractChunk {
   public void save() {
     char[] chars = null;
     byte[] bytes = null;
-    try (var stream = outputStreamFactory.get(outputFile)) {
+    try (var stream = outputStreamFactory.getOutputStream(outputFile)) {
       for (int i = 0; i < getCurrentSize(); i++) {
         var line = data[i];
 

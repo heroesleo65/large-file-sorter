@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
-import org.example.sorter.FileOutputStreamFactory;
-import org.example.sorter.OutputStreamFactory;
+import org.example.sorter.io.FileOutputStreamFactory;
+import org.example.sorter.io.OutputStreamFactory;
 
 @Log4j2
 public class FinalOutputChunk extends AbstractChunk {
@@ -41,7 +41,7 @@ public class FinalOutputChunk extends AbstractChunk {
 
   @Override
   public void save() {
-    try (var stream = outputStreamFactory.get(outputFile)) {
+    try (var stream = outputStreamFactory.getOutputStream(outputFile)) {
       for (int i = 0; i < getCurrentSize(); i++) {
         var bytes = data[i].getBytes(charset);
         stream.write(bytes);
