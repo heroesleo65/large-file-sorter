@@ -73,9 +73,7 @@ public class TemporaryChunk extends AbstractChunk {
       position = file.getFilePointer();
       return true;
     } catch (FileNotFoundException ex) {
-      log.error("File '{}' was removed", inputFile);
-      setDeleteOnExit(false); // We don't delete not own file
-      setLoadedFile();
+      fileNotFound();
     } catch (IOException ex) {
       log.error(() -> "Can't load file '" + inputFile + "'", ex);
       position = Long.MAX_VALUE;
@@ -109,20 +107,35 @@ public class TemporaryChunk extends AbstractChunk {
     attributes |= LOADED_FILE_ATTRIBUTE;
   }
 
+  private void fileNotFound() {
+    log.error("File '{}' was removed", inputFile);
+
+    // We don't delete not own file
+    attributes = LOADED_FILE_ATTRIBUTE;
+  }
+
   private boolean hasAccessToFile() {
     if (isLoadedFile()) {
       return false;
     }
 
     if (!inputFile.isFile()) {
-      log.error("File for chunks '{}' is not file", inputFile);
-      setLoadedFile();
+      if (inputFile.exists()) {
+        log.error("File for chunks '{}' is not file", inputFile);
+        setLoadedFile();
+      } else {
+        fileNotFound();
+      }
       return false;
     }
 
     if (!inputFile.canRead()) {
-      log.error("User don't has read access to file '{}'", inputFile);
-      setLoadedFile();
+      if (inputFile.exists()) {
+        log.error("User don't has read access to file '{}'", inputFile);
+        setLoadedFile();
+      } else {
+        fileNotFound();
+      }
       return false;
     }
 
