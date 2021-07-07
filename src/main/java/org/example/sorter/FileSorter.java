@@ -158,7 +158,7 @@ public class FileSorter implements Closeable {
 
     int allowableChunks = chunkParameters.getAvailableChunks();
     int allowableChunksPerThread = Math.min(
-        Math.max(allowableChunks / threadsCount, MIN_CHUNK_COUNTS_FOR_MERGE) + threadsCount,
+        Math.max(allowableChunks / threadsCount, MIN_CHUNK_COUNTS_FOR_MERGE) + threadsCount / 2,
         allowableChunks
     );
 
