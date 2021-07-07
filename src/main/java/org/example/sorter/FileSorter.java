@@ -157,22 +157,22 @@ public class FileSorter implements Closeable {
     progressBar.maxHint(2L * chunksCount);
 
     int allowableChunks = chunkParameters.getAvailableChunks();
-    int availableChunksPerThread = Math.min(
-        Math.max(allowableChunks / threadsCount + 1, MIN_CHUNK_COUNTS_FOR_MERGE),
+    int allowableChunksPerThread = Math.min(
+        Math.max(allowableChunks / threadsCount, MIN_CHUNK_COUNTS_FOR_MERGE) + threadsCount,
         allowableChunks
     );
 
-    Runnable counterDecrementByAvailableAction =
-        () -> workingChunks.addAndGet(-availableChunksPerThread);
+    Runnable counterDecrementByCountChunksByThreadAction =
+        () -> workingChunks.addAndGet(-allowableChunksPerThread);
 
     do {
-      int currentWorkingChunks = workingChunks.addAndGet(availableChunksPerThread);
+      int currentWorkingChunks = workingChunks.addAndGet(allowableChunksPerThread);
       if (currentWorkingChunks < allowableChunks) {
-        int chunksForMerging = availableChunksPerThread - 1;
-        Runnable counterDecrementAction = counterDecrementByAvailableAction;
+        int chunksForMerging = allowableChunksPerThread - 1;
+        Runnable counterDecrementAction = counterDecrementByCountChunksByThreadAction;
 
         if (allowableChunks > remainingChunks) {
-          int diffChunks = remainingChunks - availableChunksPerThread;
+          int diffChunks = remainingChunks - allowableChunksPerThread;
           if (diffChunks <= 0) {
             chunksForMerging = remainingChunks;
           } else if (workingChunks.addAndGet(diffChunks) < allowableChunks) {
@@ -204,7 +204,7 @@ public class FileSorter implements Closeable {
           action.run();
         }
       } else {
-        var availableChunks = allowableChunks - (currentWorkingChunks - availableChunksPerThread);
+        var availableChunks = allowableChunks - (currentWorkingChunks - allowableChunksPerThread);
         if (availableChunks > 1) {
           var chunksForMerging = Integer.min(remainingChunks, availableChunks - 1);
           remainingChunks -= chunksForMerging - 1;
@@ -218,13 +218,13 @@ public class FileSorter implements Closeable {
               output,
               charset,
               chunkParameters,
-              counterDecrementByAvailableAction,
+              counterDecrementByCountChunksByThreadAction,
               progressBar
           );
 
           action.run();
         } else {
-          counterDecrementByAvailableAction.run();
+          counterDecrementByCountChunksByThreadAction.run();
         }
       }
     } while (remainingChunks > 1);
