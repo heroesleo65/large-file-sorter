@@ -1,4 +1,4 @@
-package org.example.sorter.io;
+package org.example.io;
 
 import java.io.File;
 import java.io.FileNotFoundException;

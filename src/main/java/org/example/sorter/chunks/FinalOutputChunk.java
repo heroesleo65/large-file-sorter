@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
-import org.example.sorter.io.FileOutputStreamFactory;
-import org.example.sorter.io.OutputStreamFactory;
+import org.example.io.FileOutputStreamFactory;
+import org.example.io.OutputStreamFactory;
 
 @Log4j2
 public class FinalOutputChunk extends AbstractChunk {

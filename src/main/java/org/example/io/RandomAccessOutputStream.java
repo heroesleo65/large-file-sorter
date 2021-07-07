@@ -1,4 +1,4 @@
-package org.example.sorter.io;
+package org.example.io;
 
 import java.io.Closeable;
 import java.io.IOException;

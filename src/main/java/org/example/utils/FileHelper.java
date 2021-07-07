@@ -4,7 +4,7 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import org.example.sorter.io.RandomAccessOutputStream;
+import org.example.io.RandomAccessOutputStream;
 
 public final class FileHelper {
   private FileHelper() {
