@@ -1,5 +1,6 @@
 package org.example.sorter.chunks;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
@@ -9,30 +10,79 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 import lombok.extern.log4j.Log4j2;
 import org.example.context.DefaultApplicationContext;
 import org.example.io.MockOutputStream;
 import org.example.io.OutputStreamFactory;
 import org.example.utils.FileHelper;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @Log4j2
 class UnsortedChunkTest {
-  private static final List<String> UNSORTED_ASCII_LINES = Arrays.asList(
-    "qwe", "asd", "zxc", "wer", "sdf", "xcv"
+  private static final List<String> UNSORTED_ASCII_LINES = asList(
+      "qwe", "asd", "zxc", "wer", "sdf", "xcv"
   );
 
-  private static final List<String> SORTED_ASCII_LINES = Arrays.asList(
-    "asd", "qwe", "sdf", "wer", "xcv", "zxc"
+  private static final List<String> UNSORTED_UTF16_LINES = asList(
+      "ячс", "йцу", "фыв", "цук", "ыва", "чсм"
   );
+
+  @SuppressWarnings("unused")
+  static Stream<Arguments> getSortAndSaveParametersProvider() {
+    return Stream.of(
+        Arguments.of(
+            true, 3, true, UNSORTED_ASCII_LINES, asList("asd", "qwe", "zxc")
+        ),
+        Arguments.of(
+            false, 3, true, UNSORTED_ASCII_LINES, asList("asd", "qwe", "zxc")
+        ),
+        Arguments.of(
+            true, 6, true, UNSORTED_ASCII_LINES, asList("asd", "qwe", "sdf", "wer", "xcv", "zxc")
+        ),
+        Arguments.of(
+            false, 6, true, UNSORTED_ASCII_LINES, asList("asd", "qwe", "sdf", "wer", "xcv", "zxc")
+        ),
+        Arguments.of(
+            true, 12, true, UNSORTED_ASCII_LINES, asList("asd", "qwe", "sdf", "wer", "xcv", "zxc")
+        ),
+        Arguments.of(
+            false, 12, true, UNSORTED_ASCII_LINES, asList("asd", "qwe", "sdf", "wer", "xcv", "zxc")
+        ),
+        Arguments.of(
+            true, 3, false, UNSORTED_UTF16_LINES, asList("йцу", "фыв", "ячс")
+        ),
+        Arguments.of(
+            false, 3, false, UNSORTED_UTF16_LINES, asList("йцу", "фыв", "ячс")
+        ),
+        Arguments.of(
+            true, 6, false, UNSORTED_UTF16_LINES, asList("йцу", "фыв", "цук", "чсм", "ыва", "ячс")
+        ),
+        Arguments.of(
+            false, 6, false, UNSORTED_UTF16_LINES, asList("йцу", "фыв", "цук", "чсм", "ыва", "ячс")
+        ),
+        Arguments.of(
+            true, 12, false, UNSORTED_UTF16_LINES, asList("йцу", "фыв", "цук", "чсм", "ыва", "ячс")
+        ),
+        Arguments.of(
+            false, 12, false, UNSORTED_UTF16_LINES, asList("йцу", "фыв", "цук", "чсм", "ыва", "ячс")
+        )
+    );
+  }
 
   @ParameterizedTest
-  @CsvSource({"true", "false"})
-  void sortAndSave(boolean reflectionFeature) throws IOException {
+  @MethodSource("getSortAndSaveParametersProvider")
+  void sortAndSave(
+      boolean reflectionFeature,
+      int chunkSize,
+      boolean isAsciiSymbols,
+      List<String> lines,
+      List<String> result
+  ) throws IOException {
     var actualOutputStream = new ByteArrayOutputStream();
 
     var outputStreamFactory = mock(OutputStreamFactory.class);
@@ -41,9 +91,9 @@ class UnsortedChunkTest {
 
     var context = new DefaultApplicationContext(outputStreamFactory, reflectionFeature);
 
-    var chunk = new UnsortedChunk(new File(""), 12, context);
+    var chunk = new UnsortedChunk(new File(""), chunkSize, context);
 
-    for (var line : UNSORTED_ASCII_LINES) {
+    for (var line : lines) {
       chunk.add(line);
     }
 
@@ -56,7 +106,11 @@ class UnsortedChunkTest {
     }
 
     var expectedOutputStream = new ByteArrayOutputStream();
-    addAsciiLines(expectedOutputStream, SORTED_ASCII_LINES, context.hasSupportReflection());
+    if (isAsciiSymbols) {
+      addAsciiLines(expectedOutputStream, result, context.hasSupportReflection());
+    } else {
+      addUtf16Lines(expectedOutputStream, result, context.hasSupportReflection());
+    }
 
     var actual = actualOutputStream.toByteArray();
     var expected = expectedOutputStream.toByteArray();
@@ -64,22 +118,34 @@ class UnsortedChunkTest {
     assertThat(actual).containsExactly(expected);
   }
 
+  private void addUtf16Lines(
+      OutputStream stream, Collection<String> lines, boolean reflection
+  ) throws IOException {
+    for (var line : lines) {
+      if (reflection) {
+        addUtf16Line(stream, line);
+      } else {
+        addLine(stream, line);
+      }
+    }
+  }
+
   private void addAsciiLines(
       OutputStream stream, Collection<String> lines, boolean reflection
   ) throws IOException {
     for (var line : lines) {
       if (reflection) {
-        addAsciiLineReflection(stream, line);
-      } else {
         addAsciiLine(stream, line);
+      } else {
+        addLine(stream, line);
       }
     }
   }
 
-  private void addAsciiLine(OutputStream stream, String line) throws IOException {
+  private void addLine(OutputStream stream, String line, int coder) throws IOException {
     var chars = line.toCharArray();
 
-    stream.write(-1);
+    stream.write(coder);
     FileHelper.writeInt(stream, 2 * chars.length);
     for (char symbol : chars) {
       stream.write((byte) ((symbol >>> 8) & 0xFF));
@@ -87,7 +153,11 @@ class UnsortedChunkTest {
     }
   }
 
-  private void addAsciiLineReflection(OutputStream stream, String line) throws IOException {
+  private void addLine(OutputStream stream, String line) throws IOException {
+    addLine(stream, line, /* coder = */ - 1);
+  }
+
+  private void addAsciiLine(OutputStream stream, String line) throws IOException {
     var chars = line.toCharArray();
 
     stream.write(0);
@@ -95,5 +165,9 @@ class UnsortedChunkTest {
     for (char symbol : chars) {
       stream.write((byte) symbol);
     }
+  }
+
+  private void addUtf16Line(OutputStream stream, String line) throws IOException {
+    addLine(stream, line, /* coder = */ 1);
   }
 }
