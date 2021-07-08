@@ -10,7 +10,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 import lombok.extern.log4j.Log4j2;
@@ -105,44 +104,43 @@ class UnsortedChunkTest {
       log.warn("Change status of reflection");
     }
 
-    var expectedOutputStream = new ByteArrayOutputStream();
-    if (isAsciiSymbols) {
-      addAsciiLines(expectedOutputStream, result, context.hasSupportReflection());
-    } else {
-      addUtf16Lines(expectedOutputStream, result, context.hasSupportReflection());
-    }
-
     var actual = actualOutputStream.toByteArray();
-    var expected = expectedOutputStream.toByteArray();
+    var expected = isAsciiSymbols
+        ? getBytesFromAsciiLines(result, context.hasSupportReflection())
+        : getBytesFromUtf16Lines(result, context.hasSupportReflection());
 
     assertThat(actual).containsExactly(expected);
   }
 
-  private void addUtf16Lines(
-      OutputStream stream, Collection<String> lines, boolean reflection
-  ) throws IOException {
+  private static byte[] getBytesFromUtf16Lines(Iterable<String> lines, boolean reflection)
+      throws IOException {
+    int coder = reflection ? 1 : -1;
+
+    var outputStream = new ByteArrayOutputStream();
     for (var line : lines) {
-      if (reflection) {
-        addUtf16Line(stream, line);
-      } else {
-        addLine(stream, line);
-      }
+      addLine(outputStream, line, coder);
     }
+    return outputStream.toByteArray();
   }
 
-  private void addAsciiLines(
-      OutputStream stream, Collection<String> lines, boolean reflection
-  ) throws IOException {
-    for (var line : lines) {
-      if (reflection) {
-        addAsciiLine(stream, line);
-      } else {
-        addLine(stream, line);
+  private static byte[] getBytesFromAsciiLines(Iterable<String> lines, boolean reflection)
+      throws IOException {
+
+    var outputStream = new ByteArrayOutputStream();
+    if (reflection) {
+      for (var line : lines) {
+        addAsciiLine(outputStream, line);
+      }
+    } else {
+      for (var line : lines) {
+        addLine(outputStream, line);
       }
     }
+
+    return outputStream.toByteArray();
   }
 
-  private void addLine(OutputStream stream, String line, int coder) throws IOException {
+  private static void addLine(OutputStream stream, String line, int coder) throws IOException {
     var chars = line.toCharArray();
 
     stream.write(coder);
@@ -153,11 +151,11 @@ class UnsortedChunkTest {
     }
   }
 
-  private void addLine(OutputStream stream, String line) throws IOException {
+  private static void addLine(OutputStream stream, String line) throws IOException {
     addLine(stream, line, /* coder = */ - 1);
   }
 
-  private void addAsciiLine(OutputStream stream, String line) throws IOException {
+  private static void addAsciiLine(OutputStream stream, String line) throws IOException {
     var chars = line.toCharArray();
 
     stream.write(0);
@@ -165,9 +163,5 @@ class UnsortedChunkTest {
     for (char symbol : chars) {
       stream.write((byte) symbol);
     }
-  }
-
-  private void addUtf16Line(OutputStream stream, String line) throws IOException {
-    addLine(stream, line, /* coder = */ 1);
   }
 }
