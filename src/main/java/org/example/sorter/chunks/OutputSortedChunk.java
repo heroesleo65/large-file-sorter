@@ -1,15 +1,18 @@
 package org.example.sorter.chunks;
 
 import java.io.File;
+import org.example.context.ApplicationContext;
 
 public class OutputSortedChunk extends UnsortedChunk {
 
-  public OutputSortedChunk(File outputFile, int chunkSize) {
-    super(outputFile, chunkSize);
+  public OutputSortedChunk(File outputFile, int chunkSize, ApplicationContext context) {
+    super(outputFile, chunkSize, context);
   }
 
-  public OutputSortedChunk(File outputFile, int chunkSize, int bufferSize) {
-    super(outputFile, chunkSize, bufferSize);
+  public OutputSortedChunk(
+      File outputFile, int chunkSize, int bufferSize, ApplicationContext context
+  ) {
+    super(outputFile, chunkSize, bufferSize, context);
   }
 
   @Override

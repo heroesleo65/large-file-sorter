@@ -3,12 +3,9 @@ package org.example.sorter.chunks;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
-import org.example.io.FileOutputStreamFactory;
-import org.example.io.OutputStreamFactory;
+import org.example.context.ApplicationContext;
 import org.example.utils.FileHelper;
-import org.example.utils.StringHelper;
 
 @Log4j2
 public class UnsortedChunk extends AbstractChunk {
@@ -16,19 +13,17 @@ public class UnsortedChunk extends AbstractChunk {
 
   private final File outputFile;
   private final int bufferSize;
+  private final ApplicationContext context;
 
-  @Setter
-  private OutputStreamFactory outputStreamFactory;
-
-  public UnsortedChunk(File outputFile, int chunkSize) {
-    this(outputFile, chunkSize, DEFAULT_BUFFER_SIZE);
+  public UnsortedChunk(File outputFile, int chunkSize, ApplicationContext context) {
+    this(outputFile, chunkSize, DEFAULT_BUFFER_SIZE, context);
   }
 
-  public UnsortedChunk(File outputFile, int chunkSize, int bufferSize) {
+  public UnsortedChunk(File outputFile, int chunkSize, int bufferSize, ApplicationContext context) {
     super(chunkSize);
     this.outputFile = outputFile;
     this.bufferSize = bufferSize;
-    this.outputStreamFactory = FileOutputStreamFactory.getInstance();
+    this.context = context;
   }
 
   @Override
@@ -40,13 +35,13 @@ public class UnsortedChunk extends AbstractChunk {
   public void save() {
     char[] chars = null;
     byte[] bytes = null;
-    try (var stream = outputStreamFactory.getOutputStream(outputFile)) {
+    try (var stream = context.getOutputStreamFactory().getOutputStream(outputFile)) {
       for (int i = 0; i < getCurrentSize(); i++) {
         var line = data[i];
 
-        stream.write(StringHelper.getCoder(line));
+        stream.write(context.getCoder(line));
 
-        var value = StringHelper.getValueArray(line);
+        var value = context.getValueArray(line);
         if (value == null) {
           if (chars == null) {
             chars = new char[bufferSize];
@@ -75,7 +70,7 @@ public class UnsortedChunk extends AbstractChunk {
 
     int count;
     int offset = 0;
-    while ((count = StringHelper.getValueArray(line, offset, chars, bytes)) > 0) {
+    while ((count = context.getValueArray(line, offset, chars, bytes)) > 0) {
       offset += count;
       stream.write(bytes, 0, 2 * count);
     }

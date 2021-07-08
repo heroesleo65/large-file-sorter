@@ -1,6 +1,6 @@
 package org.example.sorter;
 
-import org.example.utils.StringHelper;
+import org.example.context.DefaultApplicationContext;
 import picocli.CommandLine;
 
 public class SorterApplication {
@@ -20,12 +20,6 @@ public class SorterApplication {
       return;
     }
 
-    if (sorterCommand.isDisableReflection()) {
-      StringHelper.disableReflection();
-    } else {
-      StringHelper.checkSupportReflection();
-    }
-
     var input = sorterCommand.getInput();
     var output = sorterCommand.getOutput();
     var charset = sorterCommand.getCharset();
@@ -35,7 +29,8 @@ public class SorterApplication {
     var chunkSize = sorterCommand.getStringsCount();
     var bufferSize = sorterCommand.getBufferSize();
 
-    try (var fileSorter = new FileSorter(input, charset, threadsCount)) {
+    var context = new DefaultApplicationContext(sorterCommand.isDisableReflection());
+    try (var fileSorter = new FileSorter(input, charset, threadsCount, context)) {
       fileSorter.sort(new ChunkParameters(availableChunks, chunkSize, bufferSize), output);
     } catch (InterruptedException ex) {
       // ignore

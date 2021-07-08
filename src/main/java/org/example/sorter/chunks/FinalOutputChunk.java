@@ -3,26 +3,24 @@ package org.example.sorter.chunks;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
-import org.example.io.FileOutputStreamFactory;
-import org.example.io.OutputStreamFactory;
+import org.example.context.ApplicationContext;
 
 @Log4j2
 public class FinalOutputChunk extends AbstractChunk {
   private final File outputFile;
   private final Charset charset;
+  private final ApplicationContext context;
   private final byte[] newLineBytes;
 
-  @Setter
-  private OutputStreamFactory outputStreamFactory;
-
-  public FinalOutputChunk(File outputFile, Charset charset, int chunkSize) {
+  public FinalOutputChunk(
+      File outputFile, Charset charset, int chunkSize, ApplicationContext context
+  ) {
     super(chunkSize);
     this.outputFile = outputFile;
     this.charset = charset;
     this.newLineBytes = System.lineSeparator().getBytes(charset);
-    this.outputStreamFactory = FileOutputStreamFactory.getInstance();
+    this.context = context;
   }
 
   @Override
@@ -41,7 +39,7 @@ public class FinalOutputChunk extends AbstractChunk {
 
   @Override
   public void save() {
-    try (var stream = outputStreamFactory.getOutputStream(outputFile)) {
+    try (var stream = context.getOutputStreamFactory().getOutputStream(outputFile)) {
       for (int i = 0; i < getCurrentSize(); i++) {
         var bytes = data[i].getBytes(charset);
         stream.write(bytes);

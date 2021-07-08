@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.ObjIntConsumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.example.context.ApplicationContext;
 import org.example.progressbar.ProgressBar;
 import org.example.progressbar.ProgressBarGroup;
 import org.example.sorter.chunks.FinalOutputChunk;
@@ -34,8 +35,9 @@ public class FileSorter implements Closeable {
   private final Charset charset;
   private final ExecutorService executor;
   private final int threadsCount;
+  private final ApplicationContext context;
 
-  public FileSorter(Path input, Charset charset, int threadsCount) {
+  public FileSorter(Path input, Charset charset, int threadsCount, ApplicationContext context) {
     if (threadsCount < 1) {
       throw new IllegalArgumentException("threadsCount must be greater than zero");
     }
@@ -44,6 +46,7 @@ public class FileSorter implements Closeable {
     this.charset = charset;
     this.threadsCount = threadsCount;
     this.executor = Executors.newFixedThreadPool(threadsCount);
+    this.context = context;
   }
 
   public void sort(ChunkParameters chunkParameters, Path output) throws InterruptedException {
@@ -110,7 +113,7 @@ public class FileSorter implements Closeable {
     workingChunks.incrementAndGet();
     var chunk = new UnsortedChunk(
         FileHelper.getTemporaryFile(tempDirectory, chunkNumber++),
-        chunkParameters.getChunkSize(), chunkParameters.getBufferSize()
+        chunkParameters.getChunkSize(), chunkParameters.getBufferSize(), context
     );
 
     var sortAndSaveAction = new SortAndSaveAction(workingChunks, progressBar, readyChunks);
@@ -128,7 +131,7 @@ public class FileSorter implements Closeable {
 
           chunk = new UnsortedChunk(
               FileHelper.getTemporaryFile(tempDirectory, chunkNumber++),
-              chunkParameters.getChunkSize(), chunkParameters.getBufferSize()
+              chunkParameters.getChunkSize(), chunkParameters.getBufferSize(), context
           );
           chunk.add(line);
         }
@@ -196,6 +199,7 @@ public class FileSorter implements Closeable {
             charset,
             chunkParameters,
             counterDecrementAction,
+            context,
             progressBar
         );
 
@@ -220,6 +224,7 @@ public class FileSorter implements Closeable {
               charset,
               chunkParameters,
               counterDecrementByCountChunksByThreadAction,
+              context,
               progressBar
           );
 
@@ -239,7 +244,7 @@ public class FileSorter implements Closeable {
     var chunks = new TemporaryChunk[count];
     for (int i = 0; i < count; i++) {
       var file = FileHelper.getTemporaryFile(tempDirectory, queue.take() - 1);
-      chunks[i] = new TemporaryChunk(file, chunkParameters.getChunkSize());
+      chunks[i] = new TemporaryChunk(file, chunkParameters.getChunkSize(), context);
     }
 
     return chunks;
@@ -257,17 +262,20 @@ public class FileSorter implements Closeable {
     private final Charset charset;
     private final ChunkParameters chunkParameters;
     private final Runnable counterAction;
+    private final ApplicationContext context;
     private final ProgressBar progressBar;
 
     @Override
     public void run() {
       Chunk outputChunk;
       if (remainingChunks == 1) {
-        outputChunk = new FinalOutputChunk(output, charset, chunkParameters.getChunkSize());
+        outputChunk = new FinalOutputChunk(
+            output, charset, chunkParameters.getChunkSize(), context
+        );
       } else {
         outputChunk = new OutputSortedChunk(
             FileHelper.getTemporaryFile(tempDirectory, chunkNumber),
-            chunkParameters.getChunkSize(), chunkParameters.getBufferSize()
+            chunkParameters.getChunkSize(), chunkParameters.getBufferSize(), context
         );
       }
 

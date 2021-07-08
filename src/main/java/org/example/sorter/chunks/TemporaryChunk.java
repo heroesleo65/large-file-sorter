@@ -3,12 +3,9 @@ package org.example.sorter.chunks;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
-import org.example.io.FileOutputStreamFactory;
-import org.example.io.OutputStreamFactory;
+import org.example.context.ApplicationContext;
 import org.example.utils.FileHelper;
-import org.example.utils.StringHelper;
 
 @Log4j2
 public class TemporaryChunk extends AbstractChunk {
@@ -17,16 +14,13 @@ public class TemporaryChunk extends AbstractChunk {
 
   private final File inputFile;
   private long position;
-
   private byte attributes = DELETE_ON_EXIT_ATTRIBUTE;
+  private final ApplicationContext context;
 
-  @Setter
-  private OutputStreamFactory outputStreamFactory;
-
-  public TemporaryChunk(File inputFile, int chunkSize) {
+  public TemporaryChunk(File inputFile, int chunkSize, ApplicationContext context) {
     super(chunkSize);
     this.inputFile = inputFile;
-    this.outputStreamFactory = FileOutputStreamFactory.getInstance();
+    this.context = context;
   }
 
   @Override
@@ -45,7 +39,7 @@ public class TemporaryChunk extends AbstractChunk {
       return false;
     }
 
-    try (var file = outputStreamFactory.getRandomAccessOutputStream(inputFile)) {
+    try (var file = context.getOutputStreamFactory().getRandomAccessOutputStream(inputFile)) {
       if (position >= file.length()) {
         return false;
       }
@@ -67,12 +61,12 @@ public class TemporaryChunk extends AbstractChunk {
         }
 
         // TODO: add comments for explanation
-        if (StringHelper.hasSupportReflection() || values.length < len) {
+        if (context.hasSupportReflection() || values.length < len) {
           values = new byte[len];
         }
         file.read(values, 0, len);
 
-        var line = StringHelper.newString(values, (byte) (coder & 0xFF), len, builder);
+        var line = context.createString(values, (byte) (coder & 0xFF), len, builder);
         uncheckedAdd(line);
       }
 
