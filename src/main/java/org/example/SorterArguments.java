@@ -1,4 +1,4 @@
-package org.example.sorter;
+package org.example;
 
 import java.nio.charset.Charset;
 import java.nio.file.Path;

@@ -1,6 +1,9 @@
-package org.example.sorter;
+package org.example;
 
 import org.example.context.DefaultApplicationContext;
+import org.example.sorter.ChunkParameters;
+import org.example.sorter.FileSorter;
+import org.example.utils.TerminalHelper;
 import picocli.CommandLine;
 
 public class SorterApplication {
@@ -33,7 +36,7 @@ public class SorterApplication {
     try (var fileSorter = new FileSorter(input, charset, threadsCount, context)) {
       fileSorter.sort(new ChunkParameters(availableChunks, chunkSize, bufferSize), output);
     } catch (InterruptedException ex) {
-      // ignore
+      TerminalHelper.forceCloseTerminal();
     }
   }
 }

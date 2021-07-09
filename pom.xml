@@ -106,7 +106,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>org.example.sorter.SorterApplication</mainClass>
+              <mainClass>org.example.SorterApplication</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>
