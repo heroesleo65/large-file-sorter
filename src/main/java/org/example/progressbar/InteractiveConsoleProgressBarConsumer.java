@@ -5,18 +5,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.example.utils.StringDisplayHelper;
 import org.example.utils.TerminalHelper;
-import org.jline.terminal.Terminal;
 
 public class InteractiveConsoleProgressBarConsumer extends ConsoleProgressBarConsumer {
   private final AtomicInteger position = new AtomicInteger(1);
   private final AtomicBoolean firstTimeAccept = new AtomicBoolean(false);
 
-  InteractiveConsoleProgressBarConsumer(PrintStream out, Terminal terminal) {
-    super(out, terminal);
+  InteractiveConsoleProgressBarConsumer(PrintStream out) {
+    super(out);
   }
 
-  InteractiveConsoleProgressBarConsumer(PrintStream out, int predefinedWidth, Terminal terminal) {
-    super(out, predefinedWidth, terminal);
+  InteractiveConsoleProgressBarConsumer(PrintStream out, int predefinedWidth) {
+    super(out, predefinedWidth);
   }
 
   @Override

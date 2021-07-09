@@ -10,7 +10,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import lombok.extern.log4j.Log4j2;
 import org.example.utils.ExecutorHelper;
-import org.jline.terminal.Terminal;
 
 @Log4j2
 public class ProgressBarGroup implements AutoCloseable {
@@ -19,9 +18,9 @@ public class ProgressBarGroup implements AutoCloseable {
   private final ProgressBarConsumerFactory progressBarConsumerFactory;
   private final ScheduledExecutorService executor;
 
-  public ProgressBarGroup(Terminal terminal) {
+  public ProgressBarGroup() {
     this.progressBars = new CopyOnWriteArrayList<>();
-    this.progressBarConsumerFactory = new ProgressBarConsumerFactory(terminal);
+    this.progressBarConsumerFactory = new ProgressBarConsumerFactory();
 
     this.executor = new ScheduledThreadPoolExecutor(1, runnable -> {
       var thread = Executors.defaultThreadFactory().newThread(runnable);
@@ -74,14 +73,14 @@ public class ProgressBarGroup implements AutoCloseable {
 
   @Override
   public void close() {
+    if (!ExecutorHelper.close(executor)) {
+      log.error("ScheduledExecutor in ProgressBarGroup did not terminate");
+    }
+
     for (var progressBar : progressBars) {
       progressBar.close();
     }
     progressBars.clear();
     progressBarConsumerFactory.clear();
-
-    if (!ExecutorHelper.close(executor)) {
-      log.error("ScheduledExecutor in ProgressBarGroup did not terminate");
-    }
   }
 }

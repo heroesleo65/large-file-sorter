@@ -24,7 +24,6 @@ import org.example.sorter.chunks.TemporaryChunk;
 import org.example.sorter.chunks.UnsortedChunk;
 import org.example.utils.ExecutorHelper;
 import org.example.utils.FileHelper;
-import org.jline.terminal.TerminalBuilder;
 
 @Log4j2
 public class FileSorter implements Closeable {
@@ -67,10 +66,7 @@ public class FileSorter implements Closeable {
     var workingChunks = new AtomicInteger(0);
     BlockingQueue<Integer> readyChunks = new LinkedBlockingQueue<>();
 
-    try (
-        var terminal = TerminalBuilder.builder().dumb(true).build();
-        var progressBarGroup = new ProgressBarGroup(terminal)
-    ) {
+    try (var progressBarGroup = new ProgressBarGroup()) {
       var progressBar = progressBarGroup.createProgressBar(
           /* task = */ "Sorting...", /* initialMax = */ -1
       );
@@ -91,9 +87,6 @@ public class FileSorter implements Closeable {
           tempDirectory, readyChunks, workingChunks,
           chunksCount, chunkParameters, outputFile, progressBar
       );
-    } catch (IOException ex) {
-      log.error("This should never happen! Dumb terminal should have been created.", ex);
-      System.err.println("This should never happen! Dumb terminal should have been created.");
     }
   }
 

@@ -1,6 +1,7 @@
 package org.example.utils;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.log4j.Log4j2;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
@@ -14,18 +15,64 @@ public final class TerminalHelper {
 
   private static final int DEFAULT_TERMINAL_WIDTH = 80;
 
+  private static volatile Terminal terminal;
+  private static volatile Boolean cursorMovementSupport;
+  private static final AtomicInteger terminalRefCounter = new AtomicInteger();
+
   private TerminalHelper() {
     throw new UnsupportedOperationException("TerminalHelper is utility");
   }
 
-  public static int getTerminalWidth(Terminal terminal) {
-    int width = terminal.getWidth();
-    return (width >= 10) ? width : DEFAULT_TERMINAL_WIDTH;
+  public static void openTerminal() {
+    if (terminalRefCounter.getAndIncrement() == 0) {
+      if (terminal == null) {
+        synchronized (TerminalHelper.class) {
+          if (terminal == null) {
+            try {
+              terminal = TerminalBuilder.builder().dumb(true).build();
+              cursorMovementSupport = calculateCursorMovementSupport(terminal);
+            } catch (IOException ex) {
+              log.error("Dumb terminal was not created", ex);
+            }
+          }
+        }
+      }
+    }
   }
 
-  public static boolean hasCursorMovementSupport(Terminal terminal) {
-    return terminal.getStringCapability(InfoCmp.Capability.cursor_up) != null &&
-        terminal.getStringCapability(InfoCmp.Capability.cursor_down) != null;
+  public static void closeTerminal() {
+    int counter = terminalRefCounter.decrementAndGet();
+    if (counter == 0) {
+      destroyTerminal();
+    } else if (counter < 0) {
+      throw new IllegalStateException("Too many close calls");
+    }
+  }
+
+  public static void forceCloseTerminal() {
+    destroyTerminal();
+    terminalRefCounter.set(0);
+  }
+
+  public static int getTerminalWidth() {
+    if (terminal != null) {
+      int width = terminal.getWidth();
+      return (width >= 10) ? width : DEFAULT_TERMINAL_WIDTH;
+    }
+
+    throw new IllegalStateException("Terminal was not created");
+  }
+
+  public static boolean hasCursorMovementSupport() {
+    Boolean movementSupport = cursorMovementSupport;
+    if (movementSupport != null) {
+      return movementSupport;
+    }
+    if (terminal != null) {
+      return calculateCursorMovementSupport(terminal);
+    }
+
+    throw new IllegalStateException("Terminal was not created");
   }
 
   public static StringBuilder appendMoveCursorUp(StringBuilder builder, int count) {
@@ -44,15 +91,24 @@ public final class TerminalHelper {
         .append(CARRIAGE_RETURN_CHAR);
   }
 
-  public static Terminal createTerminal() {
-    try {
-      // Defaulting to a dumb terminal when a supported terminal can not be correctly created
-      // see https://github.com/jline/jline3/issues/291
-      return TerminalBuilder.builder().dumb(true).build();
-    } catch (IOException ex) {
-      log.error("Dumb terminal was not created", ex);
-    }
+  private static boolean calculateCursorMovementSupport(Terminal terminal) {
+    return terminal.getStringCapability(InfoCmp.Capability.cursor_up) != null &&
+        terminal.getStringCapability(InfoCmp.Capability.cursor_down) != null;
+  }
 
-    return null;
+  private static void destroyTerminal() {
+    if (terminal != null) {
+      synchronized (TerminalHelper.class) {
+        if (terminal != null) {
+          try {
+            terminal.close();
+            terminal = null;
+            cursorMovementSupport = null;
+          } catch (Exception ex) {
+            log.error("Terminal was not closed", ex);
+          }
+        }
+      }
+    }
   }
 }

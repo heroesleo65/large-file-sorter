@@ -4,25 +4,21 @@ import java.io.PrintStream;
 import java.util.function.Consumer;
 import org.example.utils.StringDisplayHelper;
 import org.example.utils.TerminalHelper;
-import org.jline.terminal.Terminal;
 
 public class ConsoleProgressBarConsumer implements ProgressBarConsumer {
   private static final int CONSOLE_RIGHT_MARGIN = 1;
 
   protected final PrintStream out;
   private final int maxRenderedLength;
-  private final Terminal terminal;
-
   private volatile Consumer<ProgressBarConsumer> closeEvent;
 
-  ConsoleProgressBarConsumer(PrintStream out, Terminal terminal) {
-    this(out, -1, terminal);
+  ConsoleProgressBarConsumer(PrintStream out) {
+    this(out, -1);
   }
 
-  ConsoleProgressBarConsumer(PrintStream out, int maxRenderedLength, Terminal terminal) {
+  ConsoleProgressBarConsumer(PrintStream out, int maxRenderedLength) {
     this.out = out;
     this.maxRenderedLength = maxRenderedLength;
-    this.terminal = terminal;
   }
 
   @Override
@@ -33,7 +29,7 @@ public class ConsoleProgressBarConsumer implements ProgressBarConsumer {
   @Override
   public int getMaxRenderedLength() {
     return maxRenderedLength <= 0
-        ? TerminalHelper.getTerminalWidth(terminal) - CONSOLE_RIGHT_MARGIN
+        ? TerminalHelper.getTerminalWidth() - CONSOLE_RIGHT_MARGIN
         : maxRenderedLength;
   }
 

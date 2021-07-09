@@ -7,16 +7,13 @@ import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList;
 import lombok.extern.log4j.Log4j2;
 import org.example.utils.TerminalHelper;
-import org.jline.terminal.Terminal;
 
 @Log4j2
 public class ProgressBarConsumerFactory {
 
-  private final Terminal terminal;
   private final Collection<ProgressBarConsumer> consumers;
 
-  public ProgressBarConsumerFactory(Terminal terminal) {
-    this.terminal = terminal;
+  public ProgressBarConsumerFactory() {
     this.consumers = new CopyOnWriteArrayList<>();
   }
 
@@ -30,9 +27,11 @@ public class ProgressBarConsumerFactory {
   }
 
   public ProgressBarConsumer createConsoleConsumer(PrintStream os, int predefinedWidth) {
-    var progressBarConsumer = TerminalHelper.hasCursorMovementSupport(terminal)
-        ? new InteractiveConsoleProgressBarConsumer(os, predefinedWidth, terminal)
-        : new ConsoleProgressBarConsumer(os, predefinedWidth, terminal);
+    TerminalHelper.openTerminal();
+
+    var progressBarConsumer = TerminalHelper.hasCursorMovementSupport()
+        ? new InteractiveConsoleProgressBarConsumer(os, predefinedWidth)
+        : new ConsoleProgressBarConsumer(os, predefinedWidth);
     if (add(progressBarConsumer)) {
       return progressBarConsumer;
     }
@@ -47,10 +46,10 @@ public class ProgressBarConsumerFactory {
   private boolean add(ProgressBarConsumer item) {
     if (consumers.add(item)) {
       try {
-        item.registerCloseEvent(consumers::remove);
+        item.registerCloseEvent(this::remove);
       } catch (Exception ex) {
         log.error("Unexpected exception in registering close event on ProgressBarConsumer", ex);
-        consumers.remove(item);
+        remove(item);
         return false;
       }
 
@@ -69,5 +68,10 @@ public class ProgressBarConsumerFactory {
     }
 
     return false;
+  }
+
+  private void remove(ProgressBarConsumer item) {
+    consumers.remove(item);
+    TerminalHelper.closeTerminal();
   }
 }
