@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.ObjIntConsumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.example.concurrent.NonAsyncExecutorService;
 import org.example.context.ApplicationContext;
 import org.example.progressbar.ProgressBar;
 import org.example.progressbar.ProgressBarGroup;
@@ -44,8 +45,11 @@ public class FileSorter implements Closeable {
     this.input = input;
     this.charset = charset;
     this.threadsCount = threadsCount;
-    this.executor = Executors.newFixedThreadPool(threadsCount);
     this.context = context;
+
+    this.executor = threadsCount == 1
+        ? new NonAsyncExecutorService()
+        : Executors.newFixedThreadPool(threadsCount - 1);
   }
 
   public void sort(ChunkParameters chunkParameters, Path output) throws InterruptedException {
