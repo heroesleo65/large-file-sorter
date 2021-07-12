@@ -99,15 +99,15 @@ class UnsortedChunkTest {
     chunk.sort();
     chunk.save();
 
-    var hasSupportReflection = context.hasSupportReflection();
+    var hasSupportReflection = context.getStringContext().hasSupportReflection();
     if (hasSupportReflection != reflectionFeature) {
       log.warn("Change status of reflection");
     }
 
     var actual = actualOutputStream.toByteArray();
     var expected = isAsciiSymbols
-        ? getBytesFromAsciiLines(result, context.hasSupportReflection())
-        : getBytesFromUtf16Lines(result, context.hasSupportReflection());
+        ? getBytesFromAsciiLines(result, hasSupportReflection)
+        : getBytesFromUtf16Lines(result, hasSupportReflection);
 
     assertThat(actual).containsExactly(expected);
   }

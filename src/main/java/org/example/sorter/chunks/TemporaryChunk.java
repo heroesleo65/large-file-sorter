@@ -61,12 +61,14 @@ public class TemporaryChunk extends AbstractChunk {
         }
 
         // TODO: add comments for explanation
-        if (context.hasSupportReflection() || values.length < len) {
+        if (context.getStringContext().hasSupportReflection() || values.length < len) {
           values = new byte[len];
         }
         file.read(values, 0, len);
 
-        var line = context.createString(values, (byte) (coder & 0xFF), len, builder);
+        var line = context.getStringContext().createString(
+            values, (byte) (coder & 0xFF), len, builder
+        );
         uncheckedAdd(line);
       }
 

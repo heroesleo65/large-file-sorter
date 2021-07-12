@@ -39,9 +39,9 @@ public class UnsortedChunk extends AbstractChunk {
       for (int i = 0; i < getCurrentSize(); i++) {
         var line = data[i];
 
-        stream.write(context.getCoder(line));
+        stream.write(context.getStringContext().getCoder(line));
 
-        var value = context.getValueArray(line);
+        var value = context.getStringContext().getValueArray(line);
         if (value == null) {
           if (chars == null) {
             chars = new char[bufferSize];
@@ -70,7 +70,7 @@ public class UnsortedChunk extends AbstractChunk {
 
     int count;
     int offset = 0;
-    while ((count = context.getValueArray(line, offset, chars, bytes)) > 0) {
+    while ((count = context.getStringContext().getValueArray(line, offset, chars, bytes)) > 0) {
       offset += count;
       stream.write(bytes, 0, 2 * count);
     }
