@@ -28,7 +28,7 @@ import org.example.utils.FileHelper;
 @Log4j2
 public class FileSorter implements Closeable {
 
-  private static final int MIN_CHUNK_COUNTS_FOR_MERGE = 3;
+  private static final int MIN_CHUNKS_COUNT_FOR_MERGE = 3;
 
   private final Path input;
   private final Charset charset;
@@ -49,7 +49,7 @@ public class FileSorter implements Closeable {
   }
 
   public void sort(ChunkParameters chunkParameters, Path output) throws InterruptedException {
-    if (chunkParameters.getAvailableChunks() < MIN_CHUNK_COUNTS_FOR_MERGE) {
+    if (chunkParameters.getAvailableChunks() < MIN_CHUNKS_COUNT_FOR_MERGE) {
       throw new IllegalArgumentException("availableChunks must be greater than or equal to three");
     }
 
@@ -154,7 +154,7 @@ public class FileSorter implements Closeable {
 
     int allowableChunks = chunkParameters.getAvailableChunks();
     int allowableChunksPerThread = Math.min(
-        Math.max(allowableChunks / threadsCount, MIN_CHUNK_COUNTS_FOR_MERGE) + threadsCount / 2,
+        Math.max(allowableChunks / threadsCount, MIN_CHUNKS_COUNT_FOR_MERGE) + threadsCount / 2,
         allowableChunks
     );
 
