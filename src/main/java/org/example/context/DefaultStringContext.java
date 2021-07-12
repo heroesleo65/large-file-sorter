@@ -24,7 +24,7 @@ public class DefaultStringContext implements StringContext {
     this.supportReflection = (
         getValueOfString() != null &&
             getCoderOfString() != null &&
-            getStringConstructorByValueAndCoder() == null
+            getStringConstructorByValueAndCoder() != null
     );
   }
 
