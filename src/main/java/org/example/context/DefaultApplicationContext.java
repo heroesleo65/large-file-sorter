@@ -1,13 +1,13 @@
 package org.example.context;
 
 import lombok.Getter;
-import org.example.io.FileOutputStreamFactory;
-import org.example.io.OutputStreamFactory;
+import org.example.io.FileStreamFactory;
+import org.example.io.StreamFactory;
 
 public class DefaultApplicationContext implements ApplicationContext {
 
   @Getter
-  private final OutputStreamFactory outputStreamFactory;
+  private final StreamFactory streamFactory;
 
   @Getter
   private final StringContext stringContext;
@@ -16,25 +16,25 @@ public class DefaultApplicationContext implements ApplicationContext {
   private final FileSystemContext fileSystemContext;
 
   public DefaultApplicationContext(String prefixTemporaryDirectory, boolean supportReflection) {
-    this(FileOutputStreamFactory.getInstance(), prefixTemporaryDirectory, supportReflection);
+    this(FileStreamFactory.getInstance(), prefixTemporaryDirectory, supportReflection);
   }
 
   public DefaultApplicationContext(
-      OutputStreamFactory outputStreamFactory,
+      StreamFactory streamFactory,
       String prefixTemporaryDirectory,
       boolean supportReflection
   ) {
-    this.outputStreamFactory = outputStreamFactory;
+    this.streamFactory = streamFactory;
     this.fileSystemContext = new DefaultFileSystemContext(prefixTemporaryDirectory);
     this.stringContext = new DefaultStringContext(supportReflection);
   }
 
   public DefaultApplicationContext(
-      OutputStreamFactory outputStreamFactory,
+      StreamFactory streamFactory,
       StringContext stringContext,
       FileSystemContext fileSystemContext
   ) {
-    this.outputStreamFactory = outputStreamFactory;
+    this.streamFactory = streamFactory;
     this.stringContext = stringContext;
     this.fileSystemContext = fileSystemContext;
   }

@@ -4,7 +4,6 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.concurrent.BlockingQueue;
@@ -108,7 +107,7 @@ public class FileSorter implements Closeable {
 
     var sortAndSaveAction = new SortAndSaveAction(workingChunks, progressBar, readyChunks);
 
-    try (var bufferedReader = context.getOutputStreamFactory().getBufferedReader(input, charset)) {
+    try (var bufferedReader = context.getStreamFactory().getBufferedReader(input, charset)) {
       String line;
 
       while ((line = bufferedReader.readLine()) != null) {

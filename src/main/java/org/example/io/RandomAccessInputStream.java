@@ -3,7 +3,7 @@ package org.example.io;
 import java.io.Closeable;
 import java.io.IOException;
 
-public interface RandomAccessOutputStream extends Closeable {
+public interface RandomAccessInputStream extends Closeable {
   long length() throws IOException;
   long getFilePointer() throws IOException;
   void seek(long pos) throws IOException;

@@ -46,7 +46,7 @@ public class TemporaryChunk extends AbstractChunk {
       return false;
     }
 
-    try (var file = context.getOutputStreamFactory().getRandomAccessOutputStream(inputFile)) {
+    try (var file = context.getStreamFactory().getRandomAccessInputStream(inputFile)) {
       if (position >= file.length()) {
         return false;
       }

@@ -6,15 +6,14 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import lombok.Getter;
 
-public class FileOutputStreamFactory implements OutputStreamFactory {
+public class FileStreamFactory implements StreamFactory {
   @Getter(lazy = true)
-  private static final OutputStreamFactory instance = new FileOutputStreamFactory();
+  private static final StreamFactory instance = new FileStreamFactory();
 
   @Override
   public OutputStream getOutputStream(File file) throws FileNotFoundException {
@@ -22,9 +21,9 @@ public class FileOutputStreamFactory implements OutputStreamFactory {
   }
 
   @Override
-  public RandomAccessOutputStream getRandomAccessOutputStream(File file)
+  public RandomAccessInputStream getRandomAccessInputStream(File file)
       throws FileNotFoundException {
-    return new RandomAccessFileOutputStream(new RandomAccessFile(file, "r"));
+    return new RandomAccessFileStream(file, "r");
   }
 
   @Override

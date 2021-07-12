@@ -44,14 +44,14 @@ public class FinalOutputChunk extends AbstractChunk {
 
   @Override
   public void save() {
-    try (var stream = context.getOutputStreamFactory().getOutputStream(outputFile)) {
+    try (var stream = context.getStreamFactory().getOutputStream(outputFile)) {
       for (int i = 0; i < getCurrentSize(); i++) {
         var bytes = data[i].getBytes(charset);
         stream.write(bytes);
         stream.write(newLineBytes);
       }
     } catch (IOException ex) {
-      log.error(() -> "Can't save file '" + outputFile + "'", ex);
+      log.error(() -> "Can't save data in file '" + outputFile + "'", ex);
       // TODO: add processing error
     }
 
