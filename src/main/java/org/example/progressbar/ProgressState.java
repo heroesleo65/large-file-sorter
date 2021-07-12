@@ -8,6 +8,8 @@ import lombok.Setter;
 
 public class ProgressState {
 
+  private static final long MIN_SECONDS_FOR_ETA = 5L;
+
   @Getter
   private final String taskName;
 
@@ -87,7 +89,7 @@ public class ProgressState {
     var elapsed = getElapsed(speedElapsed, speedInstant, paused);
 
     long elapsedSeconds = elapsed.toSeconds();
-    if (elapsedSeconds < 10L) {
+    if (elapsedSeconds < MIN_SECONDS_FOR_ETA) {
       return currentSpeed.getEta(remainingProgress);
     }
 
