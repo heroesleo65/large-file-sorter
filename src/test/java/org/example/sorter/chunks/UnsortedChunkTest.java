@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import lombok.extern.log4j.Log4j2;
 import org.example.context.DefaultApplicationContext;
 import org.example.context.StringContext;
 import org.example.io.MockOutputStream;
@@ -32,7 +31,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@Log4j2
 class UnsortedChunkTest {
   private static final List<String> UNSORTED_LINES = asList(
       "qwe", "asd", "цук", "wer", "sdf", "xcv"
