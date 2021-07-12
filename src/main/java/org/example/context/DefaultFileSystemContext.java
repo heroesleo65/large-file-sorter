@@ -34,14 +34,6 @@ public class DefaultFileSystemContext implements FileSystemContext {
   }
 
   @Override
-  public File getTemporaryDirectory() {
-    if (tempDirectory == null) {
-      throw new IllegalStateException();
-    }
-    return tempDirectory;
-  }
-
-  @Override
   public int nextTemporaryFile() {
     return number.getAndIncrement();
   }
