@@ -60,15 +60,11 @@ class UnsortedChunkTest {
     var context = mock(ApplicationContext.class);
     var stringContext = mock(StringContext.class);
 
-    when(context.getOutputStream(anyInt()))
-        .thenReturn(new MockOutputStream(actualOutputStream));
-    when(context.getStringContext())
-        .thenReturn(stringContext);
+    when(context.getOutputStream(anyInt())).thenReturn(new MockOutputStream(actualOutputStream));
+    when(context.getStringContext()).thenReturn(stringContext);
 
-    when(stringContext.hasSupportReflection())
-        .thenReturn(true);
-    when(stringContext.getCoder(anyString()))
-        .thenReturn((byte) 1);
+    when(stringContext.hasSupportReflection()).thenReturn(true);
+    when(stringContext.getCoder(anyString())).thenReturn((byte) 1);
 
     var codes = initFullValueArrayStringContext(stringContext, lines);
 
@@ -98,15 +94,11 @@ class UnsortedChunkTest {
     var context = mock(ApplicationContext.class);
     var stringContext = mock(StringContext.class);
 
-    when(context.getOutputStream(anyInt()))
-        .thenReturn(new MockOutputStream(actualOutputStream));
-    when(context.getStringContext())
-        .thenReturn(stringContext);
+    when(context.getOutputStream(anyInt())).thenReturn(new MockOutputStream(actualOutputStream));
+    when(context.getStringContext()).thenReturn(stringContext);
 
-    when(stringContext.hasSupportReflection())
-        .thenReturn(false);
-    when(stringContext.getCoder(anyString()))
-        .thenReturn((byte) -1);
+    when(stringContext.hasSupportReflection()).thenReturn(false);
+    when(stringContext.getCoder(anyString())).thenReturn((byte) -1);
 
     var codes = initPartValueArrayStringContext(stringContext, lines);
 
@@ -164,7 +156,7 @@ class UnsortedChunkTest {
       result.put(line, new byte[] { (byte) number, 0 });
       when(stringContext.getValueArray(eq(line), eq(0), any(), any()))
           .thenAnswer(invocation -> {
-            var bytes = (byte[]) invocation.getArguments()[3];
+            var bytes = invocation.getArgument(3, byte[].class);
             bytes[0] = (byte) curNumber;
             bytes[1] = 0;
             return 1;
