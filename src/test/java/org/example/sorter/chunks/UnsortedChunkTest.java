@@ -2,6 +2,7 @@ package org.example.sorter.chunks;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -27,6 +28,7 @@ import org.example.context.StringContext;
 import org.example.io.MockOutputStream;
 import org.example.io.OutputStreamFactory;
 import org.example.utils.FileHelper;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -128,6 +130,17 @@ class UnsortedChunkTest {
     verify(stringContext, times(result.size())).getValueArray(anyString());
     verify(stringContext, times(2 * result.size()))
         .getValueArray(anyString(), anyInt(), any(), any());
+  }
+
+  @Test
+  void load() {
+    var outputStreamFactory = mock(OutputStreamFactory.class);
+    var stringContext = mock(StringContext.class);
+    var context = new DefaultApplicationContext(outputStreamFactory, stringContext);
+
+    var chunk = new UnsortedChunk(new File(""), 100, context);
+
+    assertThatThrownBy(chunk::load).isInstanceOf(UnsupportedOperationException.class);
   }
 
   private static Map<String, byte[]> initFullValueArrayStringContext(
