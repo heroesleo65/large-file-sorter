@@ -5,22 +5,29 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import lombok.extern.log4j.Log4j2;
 import org.example.context.ApplicationContext;
-import org.example.utils.FileHelper;
+import org.example.utils.StreamHelper;
 
 @Log4j2
 public class TemporaryChunk extends AbstractChunk {
   private static final int DELETE_ON_EXIT_ATTRIBUTE = 0x01;
   private static final int LOADED_FILE_ATTRIBUTE = 0x02;
 
+  private final int id;
   private final File inputFile;
   private long position;
   private byte attributes = DELETE_ON_EXIT_ATTRIBUTE;
   private final ApplicationContext context;
 
-  public TemporaryChunk(File inputFile, int chunkSize, ApplicationContext context) {
+  public TemporaryChunk(int id, int chunkSize, ApplicationContext context) {
     super(chunkSize);
-    this.inputFile = inputFile;
+    this.id = id;
+    this.inputFile = context.getFileSystemContext().getTemporaryFile(id);
     this.context = context;
+  }
+
+  @Override
+  public int getId() {
+    return id;
   }
 
   @Override
@@ -53,7 +60,7 @@ public class TemporaryChunk extends AbstractChunk {
           break;
         }
 
-        var len = FileHelper.readInt(file);
+        var len = StreamHelper.readInt(file);
         if (len < 0) {
           log.error("Unexpected end of file '{}'", inputFile);
           // TODO: add processing
@@ -121,8 +128,8 @@ public class TemporaryChunk extends AbstractChunk {
       return false;
     }
 
-    if (!inputFile.isFile()) {
-      if (inputFile.exists()) {
+    if (!context.getFileSystemContext().isFile(inputFile)) {
+      if (context.getFileSystemContext().exists(inputFile)) {
         log.error("File for chunks '{}' is not file", inputFile);
         setLoadedFile();
       } else {
@@ -131,8 +138,8 @@ public class TemporaryChunk extends AbstractChunk {
       return false;
     }
 
-    if (!inputFile.canRead()) {
-      if (inputFile.exists()) {
+    if (!context.getFileSystemContext().canRead(inputFile)) {
+      if (context.getFileSystemContext().exists(inputFile)) {
         log.error("User don't has read access to file '{}'", inputFile);
         setLoadedFile();
       } else {
@@ -146,7 +153,7 @@ public class TemporaryChunk extends AbstractChunk {
 
   private void deleteTemporaryFile() {
     if (isDeleteOnExit()) {
-      if (!FileHelper.safeDeleteFile(inputFile)) {
+      if (!context.getFileSystemContext().delete(inputFile)) {
         log.error("Can't delete file '{}'", inputFile);
       }
     }

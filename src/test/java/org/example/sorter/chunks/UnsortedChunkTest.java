@@ -15,7 +15,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -23,11 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import org.example.context.DefaultApplicationContext;
+import org.example.context.ApplicationContext;
 import org.example.context.StringContext;
 import org.example.io.MockOutputStream;
-import org.example.io.OutputStreamFactory;
-import org.example.utils.FileHelper;
+import org.example.utils.StreamHelper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -59,11 +57,13 @@ class UnsortedChunkTest {
       throws IOException {
     var actualOutputStream = new ByteArrayOutputStream();
 
-    var outputStreamFactory = mock(OutputStreamFactory.class);
+    var context = mock(ApplicationContext.class);
     var stringContext = mock(StringContext.class);
 
-    when(outputStreamFactory.getOutputStream(any(File.class)))
+    when(context.getOutputStream(anyInt()))
         .thenReturn(new MockOutputStream(actualOutputStream));
+    when(context.getStringContext())
+        .thenReturn(stringContext);
 
     when(stringContext.hasSupportReflection())
         .thenReturn(true);
@@ -72,10 +72,7 @@ class UnsortedChunkTest {
 
     var codes = initFullValueArrayStringContext(stringContext, lines);
 
-    var context = new DefaultApplicationContext(outputStreamFactory, stringContext);
-
-    var chunk = new UnsortedChunk(new File(""), chunkSize, context);
-
+    var chunk = new UnsortedChunk(0, chunkSize, context);
     for (var line : lines) {
       chunk.add(line);
     }
@@ -98,11 +95,13 @@ class UnsortedChunkTest {
       throws IOException {
     var actualOutputStream = new ByteArrayOutputStream();
 
-    var outputStreamFactory = mock(OutputStreamFactory.class);
+    var context = mock(ApplicationContext.class);
     var stringContext = mock(StringContext.class);
 
-    when(outputStreamFactory.getOutputStream(any(File.class)))
+    when(context.getOutputStream(anyInt()))
         .thenReturn(new MockOutputStream(actualOutputStream));
+    when(context.getStringContext())
+        .thenReturn(stringContext);
 
     when(stringContext.hasSupportReflection())
         .thenReturn(false);
@@ -111,10 +110,7 @@ class UnsortedChunkTest {
 
     var codes = initPartValueArrayStringContext(stringContext, lines);
 
-    var context = new DefaultApplicationContext(outputStreamFactory, stringContext);
-
-    var chunk = new UnsortedChunk(new File(""), chunkSize, context);
-
+    var chunk = new UnsortedChunk(0, chunkSize, context);
     for (var line : lines) {
       chunk.add(line);
     }
@@ -134,11 +130,9 @@ class UnsortedChunkTest {
 
   @Test
   void load() {
-    var outputStreamFactory = mock(OutputStreamFactory.class);
-    var stringContext = mock(StringContext.class);
-    var context = new DefaultApplicationContext(outputStreamFactory, stringContext);
+    var context = mock(ApplicationContext.class);
 
-    var chunk = new UnsortedChunk(new File(""), 100, context);
+    var chunk = new UnsortedChunk(0, 100, context);
 
     assertThatThrownBy(chunk::load).isInstanceOf(UnsupportedOperationException.class);
   }
@@ -189,7 +183,7 @@ class UnsortedChunkTest {
     var result = new ByteArrayOutputStream();
     for (var line : lines) {
       result.write(coder);
-      FileHelper.writeInt(result, lengthFun.apply(line));
+      StreamHelper.writeInt(result, lengthFun.apply(line));
       result.write(codes.get(line));
     }
     return result.toByteArray();

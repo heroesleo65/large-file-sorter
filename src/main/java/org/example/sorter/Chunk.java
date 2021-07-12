@@ -1,6 +1,8 @@
 package org.example.sorter;
 
 public interface Chunk {
+  int getId();
+
   void sort();
 
   boolean add(String line);

@@ -24,6 +24,11 @@ public class FinalOutputChunk extends AbstractChunk {
   }
 
   @Override
+  public int getId() {
+    throw new UnsupportedOperationException("FinalOutputChunk doesn't has id");
+  }
+
+  @Override
   public boolean add(String line) {
     if (!super.add(line)) {
       save();

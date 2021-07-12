@@ -32,7 +32,9 @@ public class SorterApplication {
     var chunkSize = sorterCommand.getStringsCount();
     var bufferSize = sorterCommand.getBufferSize();
 
-    var context = new DefaultApplicationContext(sorterCommand.isDisableReflection());
+    var context = new DefaultApplicationContext(
+        /* prefixTemporaryDirectory = */ null, sorterCommand.isDisableReflection()
+    );
     try (var fileSorter = new FileSorter(input, charset, threadsCount, context)) {
       fileSorter.sort(new ChunkParameters(availableChunks, chunkSize, bufferSize), output);
     } catch (InterruptedException ex) {

@@ -6,29 +6,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import org.example.io.RandomAccessOutputStream;
 
-public final class FileHelper {
-  private FileHelper() {
-    throw new UnsupportedOperationException("FileHelper is utility");
-  }
+public final class StreamHelper {
 
-  public static boolean deleteFile(File file) {
-    if (file == null || !file.exists()) {
-      return true;
-    }
-
-    return file.delete();
-  }
-
-  public static boolean safeDeleteFile(File file) {
-    try {
-      return deleteFile(file);
-    } catch (Exception ex) {
-      return false;
-    }
-  }
-
-  public static File getTemporaryFile(File temporaryDirectory, int id) {
-    return new File(temporaryDirectory, Integer.toString(id));
+  private StreamHelper() {
+    throw new UnsupportedOperationException("StreamHelper is utility");
   }
 
   public static int readInt(RandomAccessOutputStream stream) throws IOException {
