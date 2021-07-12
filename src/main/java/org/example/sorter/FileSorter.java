@@ -175,10 +175,12 @@ public class FileSorter implements Closeable {
             workingChunks.addAndGet(-diffChunks);
           }
         }
+        var chunks = getTemporaryChunks(
+            readyChunks, chunksForMerging, chunkParameters.getChunkSize()
+        );
 
         remainingChunks -= chunksForMerging - 1;
 
-        var chunks = getTemporaryChunks(chunkParameters, readyChunks, chunksForMerging);
         if (remainingChunks > 1) {
           var action = new IntermediaMergeChunksAction(
               readyChunks,
@@ -206,9 +208,12 @@ public class FileSorter implements Closeable {
         var availableChunks = allowableChunks - (currentWorkingChunks - allowableChunksPerThread);
         if (availableChunks > 1) {
           var chunksForMerging = Integer.min(remainingChunks, availableChunks - 1);
-          remainingChunks -= chunksForMerging - 1;
 
-          var chunks = getTemporaryChunks(chunkParameters, readyChunks, chunksForMerging);
+          var chunks = getTemporaryChunks(
+              readyChunks, chunksForMerging, chunkParameters.getChunkSize()
+          );
+
+          remainingChunks -= chunksForMerging - 1;
 
           Runnable action;
           if (remainingChunks > 1) {
@@ -243,11 +248,11 @@ public class FileSorter implements Closeable {
   }
 
   private TemporaryChunk[] getTemporaryChunks(
-      ChunkParameters chunkParameters, BlockingQueue<Integer> queue, int count
+      BlockingQueue<Integer> queue, int count, int chunkSize
   ) throws InterruptedException {
     var chunks = new TemporaryChunk[count];
     for (int i = 0; i < count; i++) {
-      chunks[i] = new TemporaryChunk(queue.take(), chunkParameters.getChunkSize(), context);
+      chunks[i] = new TemporaryChunk(queue.take(), chunkSize, context);
     }
 
     return chunks;
