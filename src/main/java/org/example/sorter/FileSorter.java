@@ -108,7 +108,7 @@ public class FileSorter implements Closeable {
 
     var sortAndSaveAction = new SortAndSaveAction(workingChunks, progressBar, readyChunks);
 
-    try (var bufferedReader = Files.newBufferedReader(input, charset)) {
+    try (var bufferedReader = context.getOutputStreamFactory().getBufferedReader(input, charset)) {
       String line;
 
       while ((line = bufferedReader.readLine()) != null) {
