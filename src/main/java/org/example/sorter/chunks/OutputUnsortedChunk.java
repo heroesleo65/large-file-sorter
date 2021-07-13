@@ -7,18 +7,18 @@ import org.example.context.ApplicationContext;
 import org.example.utils.StreamHelper;
 
 @Log4j2
-public class UnsortedChunk extends AbstractChunk {
+public class OutputUnsortedChunk extends AbstractChunk {
   private static final int DEFAULT_BUFFER_SIZE = 128;
 
   private final int id;
   private final int bufferSize;
   private final ApplicationContext context;
 
-  public UnsortedChunk(int id, int chunkSize, ApplicationContext context) {
+  public OutputUnsortedChunk(int id, int chunkSize, ApplicationContext context) {
     this(id, chunkSize, DEFAULT_BUFFER_SIZE, context);
   }
 
-  public UnsortedChunk(int id, int chunkSize, int bufferSize, ApplicationContext context) {
+  public OutputUnsortedChunk(int id, int chunkSize, int bufferSize, ApplicationContext context) {
     super(chunkSize);
     this.id = id;
     this.bufferSize = bufferSize;

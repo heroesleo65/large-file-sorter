@@ -8,7 +8,7 @@ import org.example.context.ApplicationContext;
 import org.example.utils.StreamHelper;
 
 @Log4j2
-public class TemporaryChunk extends AbstractChunk {
+public class InputSortedChunk extends AbstractChunk {
   private static final int DELETE_ON_EXIT_ATTRIBUTE = 0x01;
   private static final int LOADED_FILE_ATTRIBUTE = 0x02;
 
@@ -18,7 +18,7 @@ public class TemporaryChunk extends AbstractChunk {
   private byte attributes = DELETE_ON_EXIT_ATTRIBUTE;
   private final ApplicationContext context;
 
-  public TemporaryChunk(int id, int chunkSize, ApplicationContext context) {
+  public InputSortedChunk(int id, int chunkSize, ApplicationContext context) {
     super(chunkSize);
     this.id = id;
     this.inputFile = context.getFileSystemContext().getTemporaryFile(id);

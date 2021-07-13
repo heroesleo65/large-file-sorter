@@ -31,7 +31,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class UnsortedChunkTest {
+class OutputUnsortedChunkTest {
   private static final List<String> UNSORTED_LINES = asList(
       "qwe", "asd", "цук", "wer", "sdf", "xcv"
   );
@@ -68,7 +68,7 @@ class UnsortedChunkTest {
 
     var codes = initFullValueArrayStringContext(stringContext, lines);
 
-    var chunk = new UnsortedChunk(0, chunkSize, context);
+    var chunk = new OutputUnsortedChunk(0, chunkSize, context);
     for (var line : lines) {
       chunk.add(line);
     }
@@ -102,7 +102,7 @@ class UnsortedChunkTest {
 
     var codes = initPartValueArrayStringContext(stringContext, lines);
 
-    var chunk = new UnsortedChunk(0, chunkSize, context);
+    var chunk = new OutputUnsortedChunk(0, chunkSize, context);
     for (var line : lines) {
       chunk.add(line);
     }
@@ -124,7 +124,7 @@ class UnsortedChunkTest {
   void load() {
     var context = mock(ApplicationContext.class);
 
-    var chunk = new UnsortedChunk(0, 100, context);
+    var chunk = new OutputUnsortedChunk(0, 100, context);
 
     assertThatThrownBy(chunk::load).isInstanceOf(UnsupportedOperationException.class);
   }

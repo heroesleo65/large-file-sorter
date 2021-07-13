@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,7 +60,7 @@ class FileSorterTest {
       "middle-input.txt, 1, 32, 32, 128, false",
       "middle-input.txt, 2, 32, 32, 128, false",
   })
-  void sort(
+  void integrationSortInMemory(
       String resourceName,
       int threadsCount,
       int availableChunks,
@@ -120,7 +121,7 @@ class FileSorterTest {
     });
 
     try (var sorter = new FileSorter(input, UTF_8, threadsCount, context)) {
-      sorter.sort(new ChunkParameters(availableChunks, chunkSize, bufferSize), output);
+      sorter.sort(new ChunkParameters(availableChunks, chunkSize, bufferSize), output, UTF_8);
     }
 
     if (reflectionFlag != stringContext.hasSupportReflection()) {

@@ -24,7 +24,7 @@ public class MockRandomAccessInputStream extends ByteArrayInputStream
   @Override
   public synchronized void seek(long pos) {
     if (pos < 0) {
-      throw new IllegalArgumentException("pos must be great than or equal to zero");
+      throw new IllegalArgumentException("pos must be greater than or equal to zero");
     }
     if (pos > Integer.MAX_VALUE) {
       throw new IllegalArgumentException("Too big value pos");
