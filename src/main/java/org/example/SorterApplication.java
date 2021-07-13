@@ -38,7 +38,7 @@ public class SorterApplication {
     var bufferSize = sorterCommand.getBufferSize();
 
     var context = new DefaultApplicationContext(
-        /* prefixTemporaryDirectory = */ null, sorterCommand.isDisableReflection()
+        /* prefixTemporaryDirectory = */ null, !sorterCommand.isDisableReflection()
     );
     try (var fileSorter = new FileSorter(input, charset, threadsCount, context)) {
       fileSorter.sort(new ChunkParameters(availableChunks, chunkSize, bufferSize), output, charset);
