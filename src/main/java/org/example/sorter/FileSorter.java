@@ -131,7 +131,7 @@ public class FileSorter implements Closeable {
     int chunkNumber = 1;
 
     var sortAndSaveAction = new SortAndSaveAction(
-        workCounter, chunksForProcessing, progressBar
+        workCounter, chunksForProcessing, progressBar, chunkFactory
     );
 
     try (var bufferedReader = context.getStreamFactory().getBufferedReader(input, inputCharset)) {
@@ -341,6 +341,7 @@ public class FileSorter implements Closeable {
     private final AtomicInteger counter;
     private final BlockingBag bag;
     private final ProgressBar progressBar;
+    private final ChunkFactory chunkFactory;
 
     @Override
     public void accept(OutputChunk chunk) {
@@ -349,6 +350,8 @@ public class FileSorter implements Closeable {
 
       counter.decrementAndGet();
       bag.add(chunk.getId());
+
+      chunkFactory.onFinishOutputChunkEvent(chunk);
 
       progressBar.step();
     }

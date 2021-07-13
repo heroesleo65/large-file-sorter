@@ -10,7 +10,7 @@ import org.example.utils.StreamHelper;
 public class OutputUnsortedChunk extends AbstractOutputChunk {
   private static final int DEFAULT_BUFFER_SIZE = 128;
 
-  private final int id;
+  private int id;
   private final int bufferSize;
   private final ApplicationContext context;
 
@@ -28,6 +28,11 @@ public class OutputUnsortedChunk extends AbstractOutputChunk {
   @Override
   public int getId() {
     return id;
+  }
+
+  @Override
+  public void setId(int id) {
+    this.id = id;
   }
 
   @Override
