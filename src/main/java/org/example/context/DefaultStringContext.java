@@ -11,21 +11,18 @@ public class DefaultStringContext implements StringContext {
   private static final String VALUE_OF_STRING_FIELD_NAME = "value";
   private static final String CODER_OF_STRING_FIELD_NAME = "coder";
 
-  private volatile Field valueOfString = null;
-  private volatile Field coderOfString = null;
-  private volatile Constructor<String> stringConstructorByValueAndCoder = null;
+  private final Field valueOfString;
+  private final Field coderOfString;
+  private final Constructor<String> stringConstructorByValueAndCoder;
 
   private volatile boolean supportReflection;
 
   public DefaultStringContext(boolean supportReflection) {
     this.supportReflection = supportReflection;
 
-    // check support reflection
-    this.supportReflection = (
-        getValueOfString() != null &&
-            getCoderOfString() != null &&
-            getStringConstructorByValueAndCoder() != null
-    );
+    this.valueOfString = getValueOfString();
+    this.coderOfString = getCoderOfString();
+    this.stringConstructorByValueAndCoder = getStringConstructorByValueAndCoder();
   }
 
   @Override
@@ -116,7 +113,9 @@ public class DefaultStringContext implements StringContext {
     T call();
   }
 
-  private <T> T getLazyReflectionObject(Supplier<T> getter, Callable<T> setter) {
+  private <T> T getLazyReflectionObject(
+      boolean supportReflection, Supplier<T> getter, Callable<T> setter
+  ) {
     if (!supportReflection) {
       return null;
     }
@@ -127,7 +126,7 @@ public class DefaultStringContext implements StringContext {
         if (getter.get() == null) {
           object = setter.call();
           if (object == null) {
-            supportReflection = false;
+            this.supportReflection = false;
           }
         }
       }
@@ -138,22 +137,25 @@ public class DefaultStringContext implements StringContext {
 
   private Field getValueOfString() {
     return getLazyReflectionObject(
+        supportReflection,
         () -> valueOfString,
-        () -> valueOfString = ReflectionHelper.getField(String.class, VALUE_OF_STRING_FIELD_NAME)
+        () -> ReflectionHelper.getField(String.class, VALUE_OF_STRING_FIELD_NAME)
     );
   }
 
   private Field getCoderOfString() {
     return getLazyReflectionObject(
+        supportReflection,
         () -> coderOfString,
-        () -> coderOfString = ReflectionHelper.getField(String.class, CODER_OF_STRING_FIELD_NAME)
+        () -> ReflectionHelper.getField(String.class, CODER_OF_STRING_FIELD_NAME)
     );
   }
 
   private Constructor<String> getStringConstructorByValueAndCoder() {
     return getLazyReflectionObject(
+        supportReflection,
         () -> stringConstructorByValueAndCoder,
-        () -> stringConstructorByValueAndCoder = ReflectionHelper.getConstructor(
+        () -> ReflectionHelper.getConstructor(
             String.class, byte[].class, byte.class
         )
     );
