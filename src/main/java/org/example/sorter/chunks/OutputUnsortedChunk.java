@@ -7,7 +7,7 @@ import org.example.context.ApplicationContext;
 import org.example.utils.StreamHelper;
 
 @Log4j2
-public class OutputUnsortedChunk extends AbstractChunk {
+public class OutputUnsortedChunk extends AbstractOutputChunk {
   private static final int DEFAULT_BUFFER_SIZE = 128;
 
   private final int id;
@@ -31,16 +31,11 @@ public class OutputUnsortedChunk extends AbstractChunk {
   }
 
   @Override
-  public boolean load() {
-    throw new UnsupportedOperationException("Load is not supported");
-  }
-
-  @Override
   public void save() {
     char[] chars = null;
     byte[] bytes = null;
     try (var stream = context.getOutputStream(id)) {
-      for (int i = 0; i < getCurrentSize(); i++) {
+      for (int i = 0; i < size; i++) {
         var line = data[i];
 
         stream.write(context.getStringContext().getCoder(line));
@@ -65,7 +60,7 @@ public class OutputUnsortedChunk extends AbstractChunk {
       context.sendIOExceptionEvent(ex);
     }
 
-    clear(/* dirty = */ false);
+    clear();
   }
 
   private void writeData(

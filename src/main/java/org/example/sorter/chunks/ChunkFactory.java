@@ -4,8 +4,9 @@ import java.io.File;
 import java.nio.charset.Charset;
 import lombok.RequiredArgsConstructor;
 import org.example.context.ApplicationContext;
-import org.example.sorter.Chunk;
 import org.example.sorter.ChunkParameters;
+import org.example.sorter.InputChunk;
+import org.example.sorter.OutputChunk;
 
 @RequiredArgsConstructor
 public class ChunkFactory {
@@ -14,11 +15,11 @@ public class ChunkFactory {
   private final ChunkParameters chunkParameters;
   private final ApplicationContext context;
 
-  public Chunk createInputSortedChunk(int chunkId) {
+  public InputChunk createInputSortedChunk(int chunkId) {
     return new InputSortedChunk(chunkId, chunkParameters.getChunkSize(), context);
   }
 
-  public Chunk createOutputUnsortedChunk() {
+  public OutputChunk createOutputUnsortedChunk() {
     return new OutputUnsortedChunk(
         context.getFileSystemContext().nextTemporaryFile(),
         chunkParameters.getChunkSize(),
@@ -27,7 +28,7 @@ public class ChunkFactory {
     );
   }
 
-  public Chunk createTemporaryOutputSortedChunk() {
+  public OutputChunk createTemporaryOutputSortedChunk() {
     return new OutputSortedChunk(
         context.getFileSystemContext().nextTemporaryFile(),
         chunkParameters.getChunkSize(),
@@ -36,7 +37,7 @@ public class ChunkFactory {
     );
   }
 
-  public Chunk createFinalOutputSortedChunk() {
+  public OutputChunk createFinalOutputSortedChunk() {
     return new FinalOutputChunk(outputFile, charset, chunkParameters.getChunkSize(), context);
   }
 }

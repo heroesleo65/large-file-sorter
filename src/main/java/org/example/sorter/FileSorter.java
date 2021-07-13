@@ -271,12 +271,12 @@ public class FileSorter implements Closeable {
     return Math.min(result, allowableChunks);
   }
 
-  private Chunk[] getInputSortedChunks(
+  private InputChunk[] getInputSortedChunks(
       int count, ChunkFactory chunkFactory, BlockingBag chunksForProcessing
   ) throws InterruptedException {
     var it = chunksForProcessing.takes(count).iterator();
 
-    var chunks = new Chunk[count];
+    var chunks = new InputChunk[count];
     for (int i = 0; it.hasNext(); i++) {
       chunks[i] = chunkFactory.createInputSortedChunk(it.nextInt());
     }
@@ -287,7 +287,10 @@ public class FileSorter implements Closeable {
   private static abstract class MergeChunksAction {
 
     protected void merge(
-        Chunk outputChunk, Chunk[] chunks, Runnable counterAction, ProgressBar progressBar
+        OutputChunk outputChunk,
+        InputChunk[] chunks,
+        Runnable counterAction,
+        ProgressBar progressBar
     ) {
       var merger = new ChunksMerger(outputChunk);
       merger.merge(chunks);
@@ -300,7 +303,7 @@ public class FileSorter implements Closeable {
   @RequiredArgsConstructor
   private static class IntermediaMergeChunksAction extends MergeChunksAction implements Runnable {
 
-    private final Chunk[] chunks;
+    private final InputChunk[] chunks;
     private final ChunkFactory chunkFactory;
     private final BlockingBag bag;
     private final Runnable counterAction;
@@ -319,7 +322,7 @@ public class FileSorter implements Closeable {
   @RequiredArgsConstructor
   private static class FinalMergeChunksAction extends MergeChunksAction implements Runnable {
 
-    private final Chunk[] chunks;
+    private final InputChunk[] chunks;
     private final ChunkFactory chunkFactory;
     private final Runnable counterAction;
     private final ProgressBar progressBar;
@@ -333,14 +336,14 @@ public class FileSorter implements Closeable {
   }
 
   @RequiredArgsConstructor
-  private static class SortAndSaveAction implements Consumer<Chunk> {
+  private static class SortAndSaveAction implements Consumer<OutputChunk> {
 
     private final AtomicInteger counter;
     private final BlockingBag bag;
     private final ProgressBar progressBar;
 
     @Override
-    public void accept(Chunk chunk) {
+    public void accept(OutputChunk chunk) {
       chunk.sort();
       chunk.save();
 

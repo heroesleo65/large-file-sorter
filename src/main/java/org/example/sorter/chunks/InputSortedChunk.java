@@ -6,10 +6,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import lombok.extern.log4j.Log4j2;
 import org.example.context.ApplicationContext;
-import org.example.utils.StreamHelper;
 
 @Log4j2
-public class InputSortedChunk extends AbstractChunk {
+public class InputSortedChunk extends AbstractInputChunk {
   private static final int DELETE_ON_EXIT_ATTRIBUTE = 0x01;
   private static final int LOADED_FILE_ATTRIBUTE = 0x02;
 
@@ -55,17 +54,15 @@ public class InputSortedChunk extends AbstractChunk {
 
       var values = new byte[0];
       var builder = new StringBuilder(0);
-      for (int i = getCurrentCursor(); i < data.length; i++) {
+      while (size < data.length) {
         int coder = file.read();
         if (coder < 0) {
           break;
         }
 
-        var len = StreamHelper.readInt(file);
+        var len = file.readInt();
         if (len < 0) {
-          log.error("Unexpected end of file '{}'", inputFile);
-          context.sendIOExceptionEvent(new EOFException());
-          break;
+          throw new IOException("Negative length was loaded");
         }
 
         // TODO: add comments for explanation
@@ -74,10 +71,9 @@ public class InputSortedChunk extends AbstractChunk {
         }
         file.read(values, 0, len);
 
-        var line = context.getStringContext().createString(
+        data[size++] = context.getStringContext().createString(
             values, (byte) (coder & 0xFF), len, builder
         );
-        uncheckedAdd(line);
       }
 
       position = file.getFilePointer();
@@ -85,17 +81,17 @@ public class InputSortedChunk extends AbstractChunk {
     } catch (FileNotFoundException ex) {
       fileNotFound();
     } catch (IOException ex) {
-      log.error(() -> "Can't load file '" + inputFile + "'", ex);
+      if (ex instanceof EOFException) {
+        log.error("Unexpected end of file '{}'", inputFile);
+      } else {
+        log.error(() -> "Can't load file '" + inputFile + "'", ex);
+      }
+
       position = Long.MAX_VALUE;
       context.sendIOExceptionEvent(ex);
     }
 
     return false;
-  }
-
-  @Override
-  public void save() {
-    throw new UnsupportedOperationException("Save is not supported");
   }
 
   public void setDeleteOnExit(boolean value) {

@@ -6,9 +6,9 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class ChunksMerger {
-  private final Chunk outputChunk;
+  private final OutputChunk outputChunk;
 
-  public void merge(Chunk[] chunks) {
+  public void merge(InputChunk[] chunks) {
     var priorityQueue = new PriorityQueue<PriorityQueueItem>(chunks.length);
 
     for (int i = 0; i < chunks.length; i++) {

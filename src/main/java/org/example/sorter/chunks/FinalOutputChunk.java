@@ -7,7 +7,7 @@ import lombok.extern.log4j.Log4j2;
 import org.example.context.ApplicationContext;
 
 @Log4j2
-public class FinalOutputChunk extends AbstractChunk {
+public class FinalOutputChunk extends AbstractOutputChunk {
   private final File outputFile;
   private final Charset charset;
   private final ApplicationContext context;
@@ -38,14 +38,9 @@ public class FinalOutputChunk extends AbstractChunk {
   }
 
   @Override
-  public boolean load() {
-    throw new UnsupportedOperationException("Load is not supported");
-  }
-
-  @Override
   public void save() {
     try (var stream = context.getStreamFactory().getOutputStream(outputFile)) {
-      for (int i = 0; i < getCurrentSize(); i++) {
+      for (int i = 0; i < size; i++) {
         var bytes = data[i].getBytes(charset);
         stream.write(bytes);
         stream.write(newLineBytes);
@@ -55,6 +50,6 @@ public class FinalOutputChunk extends AbstractChunk {
       context.sendIOExceptionEvent(ex);
     }
 
-    clear(/* dirty = */false);
+    clear();
   }
 }
