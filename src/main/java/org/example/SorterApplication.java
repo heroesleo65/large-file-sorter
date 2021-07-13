@@ -56,7 +56,7 @@ public class SorterApplication {
         () -> arguments.getStringsCount() > 0 ? null : "--strings"
     );
     if (!invalidValues.isEmpty()) {
-      System.out.format("Invalid parameter(s): '%s'", invalidValues);
+      System.out.format("Invalid parameter(s): '%s'\n", invalidValues);
     }
     return invalidValues.isEmpty();
   }
