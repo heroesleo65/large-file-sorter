@@ -41,7 +41,7 @@ public final class TerminalHelper {
   }
 
   public static void closeTerminal() {
-    int counter = terminalRefCounter.decrementAndGet();
+    final int counter = terminalRefCounter.decrementAndGet();
     if (counter == 0) {
       destroyTerminal();
     } else if (counter < 0) {
@@ -64,7 +64,7 @@ public final class TerminalHelper {
   }
 
   public static boolean hasCursorMovementSupport() {
-    Boolean movementSupport = cursorMovementSupport;
+    final Boolean movementSupport = cursorMovementSupport;
     if (movementSupport != null) {
       return movementSupport;
     }
