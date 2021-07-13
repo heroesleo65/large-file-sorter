@@ -8,6 +8,7 @@ import org.example.context.ApplicationContext;
 
 @Log4j2
 public class FinalOutputChunk extends AbstractOutputChunk {
+
   private final File outputFile;
   private final Charset charset;
   private final ApplicationContext context;

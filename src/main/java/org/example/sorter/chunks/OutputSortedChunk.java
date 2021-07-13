@@ -2,7 +2,7 @@ package org.example.sorter.chunks;
 
 import org.example.context.ApplicationContext;
 
-public class OutputSortedChunk extends OutputUnsortedChunk {
+public class OutputSortedChunk extends AbstractBinaryOutputChunk {
 
   public OutputSortedChunk(int id, int chunkSize, ApplicationContext context) {
     super(id, chunkSize, context);

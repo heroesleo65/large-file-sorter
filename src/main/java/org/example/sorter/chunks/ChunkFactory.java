@@ -7,13 +7,14 @@ import org.example.context.ApplicationContext;
 import org.example.sorter.ChunkParameters;
 import org.example.sorter.InputChunk;
 import org.example.sorter.OutputChunk;
+import org.example.sorter.SortableOutputChunk;
 
 public class ChunkFactory {
   private final File outputFile;
   private final Charset charset;
   private final ChunkParameters chunkParameters;
   private final ApplicationContext context;
-  private final AtomicReference<OutputUnsortedChunk> cacheOutputUnsortedChunk;
+  private final AtomicReference<SortableOutputChunk> cacheOutputUnsortedChunk;
 
   public ChunkFactory(
       File outputFile, Charset charset, ChunkParameters chunkParameters, ApplicationContext context
@@ -29,7 +30,7 @@ public class ChunkFactory {
     return new InputSortedChunk(chunkId, chunkParameters.getChunkSize(), context);
   }
 
-  public OutputChunk createOutputUnsortedChunk() {
+  public SortableOutputChunk createSortableOutputChunk() {
     var chunk = cacheOutputUnsortedChunk.getAndSet(null);
     if (chunk != null) {
       chunk.setId(context.getFileSystemContext().nextTemporaryFile());
@@ -58,8 +59,8 @@ public class ChunkFactory {
   }
 
   public void onFinishOutputChunkEvent(OutputChunk chunk) {
-    if (chunk instanceof OutputUnsortedChunk) {
-      cacheOutputUnsortedChunk.set((OutputUnsortedChunk) chunk);
+    if (chunk instanceof SortableOutputChunk) {
+      cacheOutputUnsortedChunk.set((SortableOutputChunk) chunk);
     }
   }
 }

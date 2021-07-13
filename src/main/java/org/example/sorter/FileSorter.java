@@ -127,7 +127,7 @@ public class FileSorter implements Closeable {
       throw new IllegalArgumentException("allowableChunks is too small");
     }
 
-    var chunk = chunkFactory.createOutputUnsortedChunk();
+    var sortableOutputChunk = chunkFactory.createSortableOutputChunk();
     int chunkNumber = 1;
 
     var sortAndSaveAction = new SortAndSaveAction(
@@ -138,18 +138,18 @@ public class FileSorter implements Closeable {
       String line;
 
       while ((line = bufferedReader.readLine()) != null) {
-        if (!chunk.add(line)) {
+        if (!sortableOutputChunk.add(line)) {
           if (workCounter.incrementAndGet() < allowableChunks) {
-            final var currentChunk = chunk;
-            executor.submit(() -> sortAndSaveAction.accept(currentChunk));
+            final var chunk = sortableOutputChunk;
+            executor.submit(() -> sortAndSaveAction.accept(chunk));
           } else {
-            sortAndSaveAction.accept(chunk);
+            sortAndSaveAction.accept(sortableOutputChunk);
           }
 
-          chunk = chunkFactory.createOutputUnsortedChunk();
+          sortableOutputChunk = chunkFactory.createSortableOutputChunk();
           chunkNumber++;
 
-          if (!chunk.add(line)) {
+          if (!sortableOutputChunk.add(line)) {
             throw new IllegalArgumentException("Bad chunk was created");
           }
         }
@@ -163,7 +163,7 @@ public class FileSorter implements Closeable {
       return 0;
     }
 
-    sortAndSaveAction.accept(chunk);
+    sortAndSaveAction.accept(sortableOutputChunk);
 
     return chunkNumber;
   }
@@ -336,7 +336,7 @@ public class FileSorter implements Closeable {
   }
 
   @RequiredArgsConstructor
-  private static class SortAndSaveAction implements Consumer<OutputChunk> {
+  private static class SortAndSaveAction implements Consumer<SortableOutputChunk> {
 
     private final AtomicInteger counter;
     private final BlockingBag bag;
@@ -344,7 +344,7 @@ public class FileSorter implements Closeable {
     private final ChunkFactory chunkFactory;
 
     @Override
-    public void accept(OutputChunk chunk) {
+    public void accept(SortableOutputChunk chunk) {
       chunk.sort();
       chunk.save();
 

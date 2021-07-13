@@ -22,11 +22,6 @@ public abstract class AbstractOutputChunk implements OutputChunk {
   }
 
   @Override
-  public void sort() {
-    StringHelper.radixSort(data, cursor, size);
-  }
-
-  @Override
   public boolean add(String line) {
     if (size < data.length) {
       data[size++] = line;
