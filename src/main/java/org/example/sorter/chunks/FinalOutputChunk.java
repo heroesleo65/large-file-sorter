@@ -52,7 +52,7 @@ public class FinalOutputChunk extends AbstractOutputChunk {
       }
     } catch (IOException ex) {
       log.error(() -> "Can't save data in file '" + outputFile + "'", ex);
-      context.sendIOExceptionEvent(ex);
+      context.sendSignal(ex);
     }
 
     clear();

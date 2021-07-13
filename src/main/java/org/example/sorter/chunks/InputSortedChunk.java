@@ -88,7 +88,7 @@ public class InputSortedChunk extends AbstractInputChunk {
       }
 
       position = Long.MAX_VALUE;
-      context.sendIOExceptionEvent(ex);
+      context.sendSignal(ex);
     }
 
     return false;

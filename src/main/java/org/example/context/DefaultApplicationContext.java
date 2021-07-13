@@ -41,6 +41,6 @@ public class DefaultApplicationContext implements ApplicationContext {
   }
 
   @Override
-  public void sendIOExceptionEvent(IOException exception) {
+  public void sendSignal(IOException exception) {
   }
 }

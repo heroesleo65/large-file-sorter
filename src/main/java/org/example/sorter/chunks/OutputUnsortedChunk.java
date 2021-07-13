@@ -62,7 +62,7 @@ public class OutputUnsortedChunk extends AbstractOutputChunk {
     } catch (IOException ex) {
       var file = context.getFileSystemContext().getTemporaryFile(id);
       log.error(() -> "Can't save file to temporary file '" + file + "'", ex);
-      context.sendIOExceptionEvent(ex);
+      context.sendSignal(ex);
     }
 
     clear();
