@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
@@ -42,9 +44,15 @@ public class FileSorter implements Closeable {
     this.threadsCount = threadsCount;
     this.context = context;
 
-    this.executor = threadsCount == 1
-        ? new NonAsyncExecutorService()
-        : Executors.newFixedThreadPool(threadsCount - 1);
+    if (threadsCount == 1) {
+      this.executor = new NonAsyncExecutorService();
+    } else {
+      var workQueue = new ArrayBlockingQueue<Runnable>(16);
+      this.executor = new ThreadPoolExecutor(
+          threadsCount - 1, threadsCount - 1,
+          0L, TimeUnit.MILLISECONDS, workQueue, (task, executor) -> task.run()
+      );
+    }
   }
 
   public void sort(ChunkParameters chunkParameters, Path output, Charset charset)
