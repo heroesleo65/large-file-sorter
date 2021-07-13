@@ -1,5 +1,6 @@
 package org.example.sorter.chunks;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -63,7 +64,7 @@ public class InputSortedChunk extends AbstractChunk {
         var len = StreamHelper.readInt(file);
         if (len < 0) {
           log.error("Unexpected end of file '{}'", inputFile);
-          // TODO: add processing
+          context.sendIOExceptionEvent(new EOFException());
           break;
         }
 
@@ -86,6 +87,7 @@ public class InputSortedChunk extends AbstractChunk {
     } catch (IOException ex) {
       log.error(() -> "Can't load file '" + inputFile + "'", ex);
       position = Long.MAX_VALUE;
+      context.sendIOExceptionEvent(ex);
     }
 
     return false;

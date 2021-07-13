@@ -1,5 +1,6 @@
 package org.example.context;
 
+import java.io.IOException;
 import lombok.Getter;
 import org.example.io.FileStreamFactory;
 import org.example.io.StreamFactory;
@@ -37,5 +38,9 @@ public class DefaultApplicationContext implements ApplicationContext {
     this.streamFactory = streamFactory;
     this.stringContext = stringContext;
     this.fileSystemContext = fileSystemContext;
+  }
+
+  @Override
+  public void sendIOExceptionEvent(IOException exception) {
   }
 }

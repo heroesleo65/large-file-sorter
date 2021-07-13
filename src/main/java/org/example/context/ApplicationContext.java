@@ -9,6 +9,8 @@ public interface ApplicationContext {
   StringContext getStringContext();
   FileSystemContext getFileSystemContext();
 
+  void sendIOExceptionEvent(IOException exception);
+
   default OutputStream getOutputStream(int fileId) throws IOException {
     var file = getFileSystemContext().getTemporaryFile(fileId);
     return getStreamFactory().getOutputStream(file);
