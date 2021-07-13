@@ -3,6 +3,7 @@ package org.example.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Arrays;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -13,42 +14,31 @@ class StringHelperTest {
   @SuppressWarnings("unused")
   static Stream<Arguments> getRadixSortParametersProvider() {
     return Stream.of(
+        Arguments.of(new String[0], 0, 0),
+        Arguments.of(new String[] { "aslk" }, 0, 1),
+        Arguments.of(new String[] { "aslk", "ablk" }, 0, 1),
+        Arguments.of(new String[] { "aslk", "ablk" }, 0, 2),
         Arguments.of(
-            new String[0], 0, 0, new String[0]
-        ),
-        Arguments.of(
-            new String[] { "aslk" }, 0, 1, new String[] { "aslk" }
-        ),
-        Arguments.of(
-            new String[] { "aslk", "ablk" }, 0, 1, new String[] { "aslk", "ablk" }
-        ),
-        Arguments.of(
-            new String[] { "aslk", "ablk" }, 0, 2, new String[] { "ablk", "aslk" }
+            new String[] { "aslk", "ablk", "v", "tr", "variant", "foo", "bar", "foobar" },
+            0, 4
         ),
         Arguments.of(
             new String[] { "aslk", "ablk", "v", "tr", "variant", "foo", "bar", "foobar" },
-            0,
-            4,
-            new String[] { "ablk", "aslk", "tr", "v", "variant", "foo", "bar", "foobar" }
-        ),
-        Arguments.of(
-            new String[] { "aslk", "ablk", "v", "tr", "variant", "foo", "bar", "foobar" },
-            0,
-            8,
-            new String[] { "ablk", "aslk", "bar", "foo", "foobar", "tr", "v", "variant" }
+            0, 8
         ),
         Arguments.of(
             new String[] { "aslk", "ablk", "", "v", "tr", "", "variant", "foo", "bar", "foobar" },
-            0,
-            10,
-            new String[] { "", "", "ablk", "aslk", "bar", "foo", "foobar", "tr", "v", "variant" }
+            0, 10
         )
     );
   }
 
   @ParameterizedTest
   @MethodSource("getRadixSortParametersProvider")
-  void radixSort(String[] values, int fromIndex, int toIndex, String[] expected) {
+  void radixSort(String[] values, int fromIndex, int toIndex) {
+    String[] expected = values.clone();
+    Arrays.sort(expected, fromIndex, toIndex);
+
     StringHelper.radixSort(values, fromIndex, toIndex);
     assertThat(values).usingElementComparator(String::compareTo).isEqualTo(expected);
   }
