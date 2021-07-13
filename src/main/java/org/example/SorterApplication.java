@@ -30,7 +30,8 @@ public class SorterApplication {
 
     var input = sorterCommand.getInput();
     var output = sorterCommand.getOutput();
-    var charset = sorterCommand.getCharset();
+    var inputCharset = sorterCommand.getInputCharset();
+    var outputCharset = sorterCommand.getOutputCharset();
     var threadsCount = sorterCommand.getThreadsCount();
 
     var availableChunks = sorterCommand.getChunksCount();
@@ -40,8 +41,10 @@ public class SorterApplication {
     var context = new DefaultApplicationContext(
         /* prefixTemporaryDirectory = */ null, !sorterCommand.isDisableReflection()
     );
-    try (var fileSorter = new FileSorter(input, charset, threadsCount, context)) {
-      fileSorter.sort(new ChunkParameters(availableChunks, chunkSize, bufferSize), output, charset);
+    try (var fileSorter = new FileSorter(input, inputCharset, threadsCount, context)) {
+      fileSorter.sort(
+          new ChunkParameters(availableChunks, chunkSize, bufferSize), output, outputCharset
+      );
     } catch (InterruptedException ex) {
       TerminalHelper.forceCloseTerminal();
     } catch (Exception ex) {

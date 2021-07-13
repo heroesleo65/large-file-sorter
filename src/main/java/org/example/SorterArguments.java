@@ -42,6 +42,12 @@ public class SorterArguments {
   @Option(names = {"-e", "--encoding"}, description = "encoding for file")
   private String encoding;
 
+  @Option(names = {"--input-encoding"}, description = "encoding for input file")
+  private String inputEncoding;
+
+  @Option(names = {"--output-encoding"}, description = "encoding for output file")
+  private String outputEncoding;
+
   @Option(names = { "--no-reflection" }, description = "disable reflection")
   private boolean disableReflection;
 
@@ -52,5 +58,17 @@ public class SorterArguments {
     return encoding == null || encoding.isBlank()
         ? Charset.defaultCharset()
         : Charset.forName(encoding);
+  }
+
+  public Charset getInputCharset() {
+    return inputEncoding == null || inputEncoding.isBlank()
+        ? getCharset()
+        : Charset.forName(inputEncoding);
+  }
+
+  public Charset getOutputCharset() {
+    return outputEncoding == null || outputEncoding.isBlank()
+        ? getCharset()
+        : Charset.forName(outputEncoding);
   }
 }
