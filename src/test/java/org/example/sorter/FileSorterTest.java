@@ -16,7 +16,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -133,9 +132,8 @@ class FileSorterTest {
     assertThat(resultOutputStream).isNotNull();
 
     var actual = resultOutputStream.toString(UTF_8).lines().collect(toList());
-    var expected = text.lines().sorted().collect(toList());
 
-    assertThat(actual).containsExactlyElementsOf(expected);
+    assertThat(actual).isSortedAccordingTo(String::compareTo).hasSize((int) text.lines().count());
   }
 
   private String loadResource(String name) throws IOException {
