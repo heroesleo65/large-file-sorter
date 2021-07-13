@@ -5,14 +5,14 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.example.concurrent.BlockingBag;
+import org.example.concurrent.BlockingSegments;
 import org.example.concurrent.NonAsyncExecutorService;
 import org.example.context.ApplicationContext;
 import org.example.progressbar.ProgressBar;
@@ -64,7 +64,7 @@ public class FileSorter implements Closeable {
     }
 
     var usingChunksCounter = new AtomicInteger(0);
-    BlockingQueue<Integer> readyChunks = new LinkedBlockingQueue<>();
+    BlockingBag chunksForProcessing = new BlockingSegments();
 
     try (var progressBarGroup = new ProgressBarGroup()) {
       var progressBar = progressBarGroup.createProgressBar(
@@ -75,7 +75,7 @@ public class FileSorter implements Closeable {
       var chunkFactory = new ChunkFactory(outputFile, charset, chunkParameters, context);
 
       int chunksCount = sortChunks(
-          readyChunks,
+          chunksForProcessing,
           usingChunksCounter,
           chunkParameters.getAvailableChunks(),
           chunkFactory,
@@ -91,7 +91,7 @@ public class FileSorter implements Closeable {
       }
 
       mergeChunks(
-          readyChunks,
+          chunksForProcessing,
           usingChunksCounter,
           chunkParameters.getAvailableChunks(),
           chunksCount,
@@ -109,7 +109,7 @@ public class FileSorter implements Closeable {
   }
 
   private int sortChunks(
-      BlockingQueue<Integer> readyChunks,
+      BlockingBag chunksForProcessing,
       AtomicInteger usingChunksCounter,
       int allowableChunks,
       ChunkFactory chunkFactory,
@@ -122,7 +122,9 @@ public class FileSorter implements Closeable {
     var chunk = chunkFactory.createOutputUnsortedChunk();
     int chunkNumber = 1;
 
-    var sortAndSaveAction = new SortAndSaveAction(usingChunksCounter, progressBar, readyChunks);
+    var sortAndSaveAction = new SortAndSaveAction(
+        usingChunksCounter, chunksForProcessing, progressBar
+    );
 
     try (var bufferedReader = context.getStreamFactory().getBufferedReader(input, inputCharset)) {
       String line;
@@ -159,7 +161,7 @@ public class FileSorter implements Closeable {
   }
 
   private void mergeChunks(
-      BlockingQueue<Integer> readyChunks,
+      BlockingBag chunksForProcessing,
       AtomicInteger usingChunksCounter,
       int allowableChunks,
       int remainingChunks,
@@ -195,7 +197,7 @@ public class FileSorter implements Closeable {
             usingChunksCounter.addAndGet(-diffChunks);
           }
         }
-        var chunks = getInputSortedChunks(chunksForMerging, chunkFactory, readyChunks);
+        var chunks = getInputSortedChunks(chunksForMerging, chunkFactory, chunksForProcessing);
 
         remainingChunks -= chunksForMerging - 1;
 
@@ -203,7 +205,7 @@ public class FileSorter implements Closeable {
           var action = new IntermediaMergeChunksAction(
               chunks,
               chunkFactory,
-              readyChunks,
+              chunksForProcessing,
               counterDecrementAction,
               progressBar
           );
@@ -223,7 +225,7 @@ public class FileSorter implements Closeable {
         if (availableChunks > 1) {
           var chunksForMerging = Integer.min(remainingChunks, availableChunks - 1);
 
-          var chunks = getInputSortedChunks(chunksForMerging, chunkFactory, readyChunks);
+          var chunks = getInputSortedChunks(chunksForMerging, chunkFactory, chunksForProcessing);
 
           remainingChunks -= chunksForMerging - 1;
 
@@ -232,7 +234,7 @@ public class FileSorter implements Closeable {
             action = new IntermediaMergeChunksAction(
                 chunks,
                 chunkFactory,
-                readyChunks,
+                chunksForProcessing,
                 counterDecrementByCountChunksPerThreadAction,
                 progressBar
             );
@@ -262,11 +264,13 @@ public class FileSorter implements Closeable {
   }
 
   private Chunk[] getInputSortedChunks(
-      int count, ChunkFactory chunkFactory, BlockingQueue<Integer> queue
+      int count, ChunkFactory chunkFactory, BlockingBag chunksForProcessing
   ) throws InterruptedException {
+    var it = chunksForProcessing.takes(count).iterator();
+
     var chunks = new Chunk[count];
-    for (int i = 0; i < count; i++) {
-      chunks[i] = chunkFactory.createInputSortedChunk(queue.take());
+    for (int i = 0; it.hasNext(); i++) {
+      chunks[i] = chunkFactory.createInputSortedChunk(it.nextInt());
     }
 
     return chunks;
@@ -290,7 +294,7 @@ public class FileSorter implements Closeable {
 
     private final Chunk[] chunks;
     private final ChunkFactory chunkFactory;
-    private final BlockingQueue<Integer> queue;
+    private final BlockingBag bag;
     private final Runnable counterAction;
     private final ProgressBar progressBar;
 
@@ -300,7 +304,7 @@ public class FileSorter implements Closeable {
 
       merge(outputChunk, chunks, counterAction, progressBar);
 
-      queue.offer(outputChunk.getId());
+      bag.add(outputChunk.getId());
     }
   }
 
@@ -324,8 +328,8 @@ public class FileSorter implements Closeable {
   private static class SortAndSaveAction implements Consumer<Chunk> {
 
     private final AtomicInteger counter;
+    private final BlockingBag bag;
     private final ProgressBar progressBar;
-    private final BlockingQueue<Integer> queue;
 
     @Override
     public void accept(Chunk chunk) {
@@ -333,7 +337,7 @@ public class FileSorter implements Closeable {
       chunk.save();
 
       counter.decrementAndGet();
-      queue.offer(chunk.getId());
+      bag.add(chunk.getId());
 
       progressBar.step();
     }
