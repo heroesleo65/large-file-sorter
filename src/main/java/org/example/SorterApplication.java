@@ -5,8 +5,9 @@ import java.util.List;
 import java.util.function.Supplier;
 import lombok.extern.log4j.Log4j2;
 import org.example.context.DefaultApplicationContext;
-import org.example.sorter.ChunkParameters;
+import org.example.sorter.parameters.ChunkParameters;
 import org.example.sorter.FileSorter;
+import org.example.sorter.parameters.formula.QuadraticParametersFormula;
 import org.example.utils.TerminalHelper;
 import picocli.CommandLine;
 
@@ -43,7 +44,10 @@ public class SorterApplication {
         /* prefixTemporaryDirectory = */ null, !sorterCommand.isDisableReflection()
     );
     try (var fileSorter = new FileSorter(input, inputCharset, threadsCount, context)) {
-      var parameters = new ChunkParameters(availableChunks, chunkSize, bufferSize, memorySize);
+      var formula = new QuadraticParametersFormula();
+      var parameters = new ChunkParameters(
+          availableChunks, chunkSize, bufferSize, memorySize, formula
+      );
       fileSorter.sort(parameters, output, outputCharset);
     } catch (InterruptedException ex) {
       TerminalHelper.forceCloseTerminal();

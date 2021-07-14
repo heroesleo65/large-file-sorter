@@ -4,7 +4,7 @@ import java.io.File;
 import java.nio.charset.Charset;
 import java.util.concurrent.atomic.AtomicReference;
 import org.example.context.ApplicationContext;
-import org.example.sorter.ChunkParameters;
+import org.example.sorter.parameters.ChunkParameters;
 import org.example.sorter.InputChunk;
 import org.example.sorter.OutputChunk;
 import org.example.sorter.SortableOutputChunk;

@@ -20,6 +20,7 @@ import org.example.context.ApplicationContext;
 import org.example.progressbar.ProgressBar;
 import org.example.progressbar.ProgressBarGroup;
 import org.example.sorter.chunks.ChunkFactory;
+import org.example.sorter.parameters.ChunkParameters;
 import org.example.utils.ExecutorHelper;
 
 @Log4j2
