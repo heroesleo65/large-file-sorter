@@ -85,7 +85,7 @@ public class FileSorter implements Closeable {
       int chunksCount = sortChunks(
           chunksForProcessing,
           workCounter,
-          chunkParameters.getAvailableChunks(),
+          chunkParameters,
           chunkFactory,
           progressBar
       );
@@ -119,11 +119,11 @@ public class FileSorter implements Closeable {
   private int sortChunks(
       BlockingBag chunksForProcessing,
       AtomicInteger workCounter,
-      int allowableChunks,
+      ChunkParameters chunkParameters,
       ChunkFactory chunkFactory,
       ProgressBar progressBar
   ) {
-    if (workCounter.incrementAndGet() > allowableChunks) {
+    if (workCounter.incrementAndGet() > chunkParameters.getAvailableChunks()) {
       throw new IllegalArgumentException("allowableChunks is too small");
     }
 
@@ -137,9 +137,16 @@ public class FileSorter implements Closeable {
     try (var bufferedReader = context.getStreamFactory().getBufferedReader(input, inputCharset)) {
       String line;
 
+      long countLines = 0;
+      long totalLength = 0;
       while ((line = bufferedReader.readLine()) != null) {
+        totalLength += line.length();
+        countLines++;
+
+        chunkParameters.setAvgStringLength(totalLength, countLines);
+
         if (!sortableOutputChunk.add(line)) {
-          if (workCounter.incrementAndGet() < allowableChunks) {
+          if (workCounter.incrementAndGet() < chunkParameters.getAvailableChunks()) {
             final var chunk = sortableOutputChunk;
             executor.submit(() -> sortAndSaveAction.accept(chunk));
           } else {

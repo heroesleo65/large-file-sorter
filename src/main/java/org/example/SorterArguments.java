@@ -2,6 +2,7 @@ package org.example;
 
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.util.OptionalInt;
 import lombok.Getter;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -16,15 +17,15 @@ public class SorterArguments {
 
   @Option(
       names = {"--chunks"},
-      description = "count of chunks (default: ${DEFAULT-VALUE})"
+      description = "count of chunks (default: 32)"
   )
-  private int chunksCount = 32;
+  private Integer chunksCount;
 
   @Option(
       names = {"--strings"},
-      description = "count of strings in chunk (default: ${DEFAULT-VALUE})"
+      description = "count of strings in chunk (default: 64)"
   )
-  private int stringsCount = 64;
+  private Integer stringsCount;
 
   @Option(
       names = {"--buffer-size"},
@@ -50,6 +51,12 @@ public class SorterArguments {
 
   @Option(names = { "--no-reflection" }, description = "disable reflection")
   private boolean disableReflection;
+
+  @Option(
+      names = { "-m", "--memorySize" },
+      description = "calculate 'chunks' and 'strings' using memorySize (memorySize in bytes)"
+  )
+  private Long memorySize;
 
   @Option(names = { "-h", "--help" }, description = "display a help message", usageHelp = true)
   private boolean helpRequested;

@@ -120,7 +120,8 @@ class FileSorterTest {
     });
 
     try (var sorter = new FileSorter(input, UTF_8, threadsCount, context)) {
-      sorter.sort(new ChunkParameters(availableChunks, chunkSize, bufferSize), output, UTF_8);
+      var parameters = new ChunkParameters(availableChunks, chunkSize, bufferSize, null);
+      sorter.sort(parameters, output, UTF_8);
     }
 
     if (reflectionFlag != stringContext.hasSupportReflection()) {

@@ -37,14 +37,14 @@ public class SorterApplication {
     var availableChunks = sorterCommand.getChunksCount();
     var chunkSize = sorterCommand.getStringsCount();
     var bufferSize = sorterCommand.getBufferSize();
+    var memorySize = sorterCommand.getMemorySize();
 
     var context = new DefaultApplicationContext(
         /* prefixTemporaryDirectory = */ null, !sorterCommand.isDisableReflection()
     );
     try (var fileSorter = new FileSorter(input, inputCharset, threadsCount, context)) {
-      fileSorter.sort(
-          new ChunkParameters(availableChunks, chunkSize, bufferSize), output, outputCharset
-      );
+      var parameters = new ChunkParameters(availableChunks, chunkSize, bufferSize, memorySize);
+      fileSorter.sort(parameters, output, outputCharset);
     } catch (InterruptedException ex) {
       TerminalHelper.forceCloseTerminal();
     } catch (Exception ex) {
@@ -55,8 +55,16 @@ public class SorterApplication {
   private static boolean check(SorterArguments arguments) {
     List<String> invalidValues = check(
         () -> arguments.getThreadsCount() > 0 ? null : "--threads",
-        () -> arguments.getChunksCount() > 2 ? null : "--chunks",
-        () -> arguments.getStringsCount() > 0 ? null : "--strings"
+        () -> arguments.getBufferSize() > 0 ? null : "--buffer-size",
+        () -> arguments.getChunksCount() == null || arguments.getChunksCount() > 2
+            ? null
+            : "--chunks",
+        () -> arguments.getStringsCount() == null || arguments.getStringsCount() > 0
+            ? null
+            : "--strings",
+        () -> arguments.getMemorySize() == null || arguments.getMemorySize() >= 100 * 1024 * 1024
+            ? null
+            : "--memorySize"
     );
     if (!invalidValues.isEmpty()) {
       System.out.format("Invalid parameter(s): '%s'\n", invalidValues);
