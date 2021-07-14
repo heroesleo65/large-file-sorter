@@ -2,7 +2,6 @@ package org.example;
 
 import java.nio.charset.Charset;
 import java.nio.file.Path;
-import java.util.OptionalInt;
 import lombok.Getter;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
