@@ -1,14 +1,14 @@
 package org.example.sorter.parameters.formula;
 
+import org.example.sorter.parameters.DefaultParameters;
 import org.example.sorter.parameters.ParametersFormula;
 
 public class QuadraticParametersFormula implements ParametersFormula {
 
-  private static final long RESERVED_FOR_SYSTEM_MEMORY_SIZE = 50L * 1024L * 1024L; // 50Mb
-
   @Override
   public int getAvailableChunks(long memSize, long avgStrSize, int chunkSize, long bufSize) {
-    return (int) ((memSize - RESERVED_FOR_SYSTEM_MEMORY_SIZE) / (avgStrSize * chunkSize + bufSize));
+    long size = memSize - DefaultParameters.RESERVED_FOR_SYSTEM_MEMORY_SIZE;
+    return (int) (size / (avgStrSize * chunkSize + bufSize));
   }
 
   @Override
@@ -18,7 +18,8 @@ public class QuadraticParametersFormula implements ParametersFormula {
 
   @Override
   public int getChunkSize(long memSize, int availableChunks, long avgStrSize, long bufSize) {
-    return (int) ((memSize / availableChunks - bufSize) / avgStrSize);
+    long size = memSize - DefaultParameters.RESERVED_FOR_SYSTEM_MEMORY_SIZE;
+    return (int) ((size / availableChunks - bufSize) / avgStrSize);
   }
 
   @Override
@@ -27,7 +28,7 @@ public class QuadraticParametersFormula implements ParametersFormula {
   }
 
   private long quadraticFormula(long memSize, long avgStrSize, long bufSize) {
-    long size = memSize - RESERVED_FOR_SYSTEM_MEMORY_SIZE;
+    long size = memSize - DefaultParameters.RESERVED_FOR_SYSTEM_MEMORY_SIZE;
     long d = (long) Math.sqrt(bufSize * bufSize + 4L * size * avgStrSize);
     return (d - bufSize) / (2 * avgStrSize);
   }

@@ -6,16 +6,13 @@ import lombok.ToString;
 @ToString(exclude = {"formula", "cacheAvailableChunks", "cacheChunkSize"})
 public class ChunkParameters {
 
-  private static final int DEFAULT_AVAILABLE_CHUNKS = 32;
-  private static final int DEFAULT_CHUNK_SIZE = 64;
-
   private final Integer availableChunks;
   private final Integer chunkSize;
   @Getter
   private final int bufferSize;
 
   private final Long memorySize;
-  private long avgStringSize = 5 * 1024 * 1024; // 5Mb
+  private long avgStringSize = DefaultParameters.AVG_STRING_MEMORY_SIZE;
 
   private final ParametersFormula formula;
 
@@ -53,7 +50,7 @@ public class ChunkParameters {
     }
 
     if (memorySize == null) {
-      return DEFAULT_AVAILABLE_CHUNKS;
+      return DefaultParameters.AVAILABLE_CHUNKS;
     }
 
     if (cacheAvailableChunks == null) {
@@ -68,7 +65,7 @@ public class ChunkParameters {
     }
 
     if (memorySize == null) {
-      return DEFAULT_CHUNK_SIZE;
+      return DefaultParameters.CHUNK_SIZE;
     }
 
     if (cacheChunkSize == null) {
