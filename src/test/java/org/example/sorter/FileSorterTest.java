@@ -28,7 +28,7 @@ import org.example.io.MockOutputStream;
 import org.example.io.MockRandomAccessInputStream;
 import org.example.io.StreamFactory;
 import org.example.sorter.parameters.ChunkParameters;
-import org.example.sorter.parameters.formula.QuadraticParametersFormula;
+import org.example.sorter.parameters.formula.QuadraticParameterFormula;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.invocation.InvocationOnMock;
@@ -122,7 +122,7 @@ class FileSorterTest {
     });
 
     try (var sorter = new FileSorter(input, UTF_8, threadsCount, context)) {
-      var formula = new QuadraticParametersFormula();
+      var formula = new QuadraticParameterFormula();
       var parameters = new ChunkParameters(
           availableChunks, chunkSize, bufferSize, null, formula
       );

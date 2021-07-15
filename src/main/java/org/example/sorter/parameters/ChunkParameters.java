@@ -18,7 +18,7 @@ public class ChunkParameters {
   private final Long memorySize;
   private long avgStringSize = DEFAULT_AVG_STRING_MEMORY_SIZE;
 
-  private final ParametersFormula formula;
+  private final ParameterFormula formula;
 
   private final CacheCalculate cacheCalculate;
   private volatile Integer cacheAvailableChunks;
@@ -29,7 +29,7 @@ public class ChunkParameters {
       Integer chunkSize,
       int bufferSize,
       Long memorySize,
-      ParametersFormula formula
+      ParameterFormula formula
   ) {
     this.availableChunks = availableChunks;
     this.chunkSize = chunkSize;

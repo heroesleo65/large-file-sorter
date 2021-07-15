@@ -4,9 +4,9 @@ import static org.example.sorter.parameters.DefaultParameters.MIN_AVAILABLE_CHUN
 import static org.example.sorter.parameters.DefaultParameters.MIN_CHUNK_SIZE;
 import static org.example.sorter.parameters.DefaultParameters.RESERVED_FOR_SYSTEM_MEMORY_SIZE;
 
-import org.example.sorter.parameters.ParametersFormula;
+import org.example.sorter.parameters.ParameterFormula;
 
-public class QuadraticParametersFormula implements ParametersFormula {
+public class QuadraticParameterFormula implements ParameterFormula {
 
   @Override
   public int getAvailableChunks(long memSize, long avgStrSize, int chunkSize, long bufSize) {
