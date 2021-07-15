@@ -2,10 +2,11 @@ package org.example;
 
 import static org.example.sorter.parameters.DefaultParameters.MIN_AVAILABLE_CHUNKS;
 import static org.example.sorter.parameters.DefaultParameters.MIN_CHUNK_SIZE;
-import static org.example.sorter.parameters.DefaultParameters.RESERVED_FOR_SYSTEM_MEMORY_SIZE;
+import static org.example.sorter.parameters.DefaultParameters.MIN_MEMORY_SIZE;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import lombok.extern.log4j.Log4j2;
 import org.example.context.DefaultApplicationContext;
@@ -64,15 +65,13 @@ public class SorterApplication {
     List<String> invalidValues = check(
         () -> arguments.getThreadsCount() > 0 ? null : "--threads",
         () -> arguments.getBufferSize() > 0 ? null : "--buffer-size",
-        () ->
-            arguments.getChunksCount() == null || arguments.getChunksCount() >= MIN_AVAILABLE_CHUNKS
-                ? null
-                : "--chunks",
-        () -> arguments.getStringsCount() == null || arguments.getStringsCount() >= MIN_CHUNK_SIZE
+        () -> isEmptyOr(arguments.getChunksCount(), value -> value >= MIN_AVAILABLE_CHUNKS)
+            ? null
+            : "--chunks",
+        () -> isEmptyOr(arguments.getStringsCount(), value -> value >= MIN_CHUNK_SIZE)
             ? null
             : "--strings",
-        () -> arguments.getMemorySize() == null
-            || arguments.getMemorySize() >= 2 * RESERVED_FOR_SYSTEM_MEMORY_SIZE
+        () -> isEmptyOr(arguments.getMemorySize(), value -> value >= MIN_MEMORY_SIZE)
             ? null
             : "--memorySize"
     );
@@ -91,5 +90,9 @@ public class SorterApplication {
       }
     }
     return result;
+  }
+
+  private static <T> boolean isEmptyOr(T value, Predicate<T> predicate) {
+    return value == null || predicate.test(value);
   }
 }
