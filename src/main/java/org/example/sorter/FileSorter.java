@@ -1,5 +1,8 @@
 package org.example.sorter;
 
+import static org.example.sorter.parameters.DefaultParameters.MIN_AVAILABLE_CHUNKS;
+import static org.example.sorter.parameters.DefaultParameters.MIN_CHUNK_SIZE;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -27,7 +30,6 @@ import org.example.utils.ExecutorHelper;
 public class FileSorter implements Closeable {
 
   private static final String PROGRESS_BAR_TASK_NAME = "Sorting...";
-  private static final int MIN_CHUNKS_COUNT_FOR_MERGE = 3;
 
   private final Path input;
   private final Charset inputCharset;
@@ -58,10 +60,12 @@ public class FileSorter implements Closeable {
 
   public void sort(ChunkParameters chunkParameters, Path output, Charset charset)
       throws InterruptedException {
-    if (chunkParameters.getAvailableChunks() < MIN_CHUNKS_COUNT_FOR_MERGE) {
-      throw new IllegalArgumentException("availableChunks must be greater than or equal to three");
+    if (chunkParameters.getAvailableChunks() < MIN_AVAILABLE_CHUNKS) {
+      throw new IllegalArgumentException(
+          String.format("availableChunks must be greater than or equal to %d", MIN_AVAILABLE_CHUNKS)
+      );
     }
-    if (chunkParameters.getChunkSize() < 1) {
+    if (chunkParameters.getChunkSize() < MIN_CHUNK_SIZE) {
       throw new IllegalArgumentException("chunkSize must be positive value");
     }
 
@@ -275,7 +279,7 @@ public class FileSorter implements Closeable {
 
   private int calculateAllowableChunksPerThread(int allowableChunks, int threadsCount) {
     int result =
-        Math.max(allowableChunks / threadsCount, MIN_CHUNKS_COUNT_FOR_MERGE) + (threadsCount >>> 1);
+        Math.max(allowableChunks / threadsCount, MIN_AVAILABLE_CHUNKS) + (threadsCount >>> 1);
     return Math.min(result, allowableChunks);
   }
 

@@ -1,5 +1,9 @@
 package org.example.sorter.parameters;
 
+import static org.example.sorter.parameters.DefaultParameters.DEFAULT_AVAILABLE_CHUNKS;
+import static org.example.sorter.parameters.DefaultParameters.DEFAULT_AVG_STRING_MEMORY_SIZE;
+import static org.example.sorter.parameters.DefaultParameters.DEFAULT_CHUNK_SIZE;
+
 import lombok.Getter;
 import lombok.ToString;
 
@@ -12,7 +16,7 @@ public class ChunkParameters {
   private final int bufferSize;
 
   private final Long memorySize;
-  private long avgStringSize = DefaultParameters.AVG_STRING_MEMORY_SIZE;
+  private long avgStringSize = DEFAULT_AVG_STRING_MEMORY_SIZE;
 
   private final ParametersFormula formula;
 
@@ -50,7 +54,7 @@ public class ChunkParameters {
     }
 
     if (memorySize == null) {
-      return DefaultParameters.AVAILABLE_CHUNKS;
+      return DEFAULT_AVAILABLE_CHUNKS;
     }
 
     if (cacheAvailableChunks == null) {
@@ -65,7 +69,7 @@ public class ChunkParameters {
     }
 
     if (memorySize == null) {
-      return DefaultParameters.CHUNK_SIZE;
+      return DEFAULT_CHUNK_SIZE;
     }
 
     if (cacheChunkSize == null) {

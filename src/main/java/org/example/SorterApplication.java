@@ -1,12 +1,16 @@
 package org.example;
 
+import static org.example.sorter.parameters.DefaultParameters.MIN_AVAILABLE_CHUNKS;
+import static org.example.sorter.parameters.DefaultParameters.MIN_CHUNK_SIZE;
+import static org.example.sorter.parameters.DefaultParameters.RESERVED_FOR_SYSTEM_MEMORY_SIZE;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import lombok.extern.log4j.Log4j2;
 import org.example.context.DefaultApplicationContext;
-import org.example.sorter.parameters.ChunkParameters;
 import org.example.sorter.FileSorter;
+import org.example.sorter.parameters.ChunkParameters;
 import org.example.sorter.parameters.formula.QuadraticParametersFormula;
 import org.example.utils.TerminalHelper;
 import picocli.CommandLine;
@@ -60,13 +64,15 @@ public class SorterApplication {
     List<String> invalidValues = check(
         () -> arguments.getThreadsCount() > 0 ? null : "--threads",
         () -> arguments.getBufferSize() > 0 ? null : "--buffer-size",
-        () -> arguments.getChunksCount() == null || arguments.getChunksCount() > 2
-            ? null
-            : "--chunks",
-        () -> arguments.getStringsCount() == null || arguments.getStringsCount() > 0
+        () ->
+            arguments.getChunksCount() == null || arguments.getChunksCount() >= MIN_AVAILABLE_CHUNKS
+                ? null
+                : "--chunks",
+        () -> arguments.getStringsCount() == null || arguments.getStringsCount() >= MIN_CHUNK_SIZE
             ? null
             : "--strings",
-        () -> arguments.getMemorySize() == null || arguments.getMemorySize() >= 100 * 1024 * 1024
+        () -> arguments.getMemorySize() == null
+            || arguments.getMemorySize() >= 2 * RESERVED_FOR_SYSTEM_MEMORY_SIZE
             ? null
             : "--memorySize"
     );
