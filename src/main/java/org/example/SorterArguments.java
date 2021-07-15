@@ -32,7 +32,7 @@ public class SorterArguments {
       description = "buffer size for saving data. Ignored if reflection is enabled "
           + "(default: ${DEFAULT-VALUE})"
   )
-  private int bufferSize = 128;
+  private int bufferSize = 1024;
 
   @Option(names = {"-i", "--input"}, description = "input file", required = true)
   private Path input;
