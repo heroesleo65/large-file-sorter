@@ -2,6 +2,7 @@ package org.example;
 
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.util.function.Supplier;
 import lombok.Getter;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -61,20 +62,20 @@ public class SorterArguments {
   private boolean helpRequested;
 
   public Charset getCharset() {
-    return encoding == null || encoding.isBlank()
-        ? Charset.defaultCharset()
-        : Charset.forName(encoding);
+    return getCharset(encoding, Charset::defaultCharset);
   }
 
   public Charset getInputCharset() {
-    return inputEncoding == null || inputEncoding.isBlank()
-        ? getCharset()
-        : Charset.forName(inputEncoding);
+    return getCharset(inputEncoding, this::getCharset);
   }
 
   public Charset getOutputCharset() {
-    return outputEncoding == null || outputEncoding.isBlank()
-        ? getCharset()
-        : Charset.forName(outputEncoding);
+    return getCharset(outputEncoding, this::getCharset);
+  }
+
+  private Charset getCharset(String encoding, Supplier<Charset> defaultCharset) {
+    return encoding == null || encoding.isBlank()
+        ? defaultCharset.get()
+        : Charset.forName(encoding);
   }
 }
