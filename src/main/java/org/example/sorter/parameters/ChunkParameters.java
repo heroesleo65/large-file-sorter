@@ -2,7 +2,6 @@ package org.example.sorter.parameters;
 
 import lombok.Getter;
 import lombok.ToString;
-import org.example.sorter.parameters.ParametersFormula;
 
 @ToString(exclude = {"formula", "cacheAvailableChunks", "cacheChunkSize"})
 public class ChunkParameters {
