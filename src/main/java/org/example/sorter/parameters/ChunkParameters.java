@@ -100,7 +100,7 @@ public class ChunkParameters {
     @Override
     public void calculate(long memorySize, long avgStringSize, long bufferSize) {
       cacheAvailableChunks = formula.getAvailableChunks(memorySize, avgStringSize, bufferSize);
-      cacheChunkSize = formula.getAvailableChunks(memorySize, avgStringSize, bufferSize);
+      cacheChunkSize = formula.getChunkSize(memorySize, avgStringSize, bufferSize);
     }
   }
 
