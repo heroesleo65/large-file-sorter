@@ -1,5 +1,9 @@
 package org.example;
 
+import static org.example.sorter.parameters.DefaultParameters.DEFAULT_AVAILABLE_CHUNKS;
+import static org.example.sorter.parameters.DefaultParameters.DEFAULT_BUFFER_SIZE;
+import static org.example.sorter.parameters.DefaultParameters.DEFAULT_CHUNK_SIZE;
+
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.function.Supplier;
@@ -17,13 +21,13 @@ public class SorterArguments {
 
   @Option(
       names = {"--chunks"},
-      description = "count of chunks (default: 32)"
+      description = "count of chunks (default: " + DEFAULT_AVAILABLE_CHUNKS + ")"
   )
   private Integer chunksCount;
 
   @Option(
       names = {"--strings"},
-      description = "count of strings in chunk (default: 64)"
+      description = "count of strings in chunk (default: " + DEFAULT_CHUNK_SIZE + ")"
   )
   private Integer stringsCount;
 
@@ -32,7 +36,7 @@ public class SorterArguments {
       description = "buffer size for saving data. Ignored if reflection is enabled "
           + "(default: ${DEFAULT-VALUE})"
   )
-  private int bufferSize = 1024;
+  private int bufferSize = DEFAULT_BUFFER_SIZE;
 
   @Option(names = {"-i", "--input"}, description = "input file", required = true)
   private Path input;
