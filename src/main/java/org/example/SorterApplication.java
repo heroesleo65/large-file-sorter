@@ -46,7 +46,7 @@ public class SorterApplication {
     var memorySize = sorterCommand.getMemorySize();
 
     var context = new DefaultApplicationContext(
-        /* prefixTemporaryDirectory = */ null, !sorterCommand.isDisableReflection()
+        /* prefixTemporaryDirectory = */ null, sorterCommand.isEnableReflection()
     );
     try (var fileSorter = new FileSorter(input, inputCharset, threadsCount, context)) {
       var formula = new QuadraticParameterFormula();

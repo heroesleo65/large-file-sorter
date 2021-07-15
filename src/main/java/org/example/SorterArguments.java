@@ -53,8 +53,8 @@ public class SorterArguments {
   @Option(names = {"--output-encoding"}, description = "encoding for output file")
   private String outputEncoding;
 
-  @Option(names = { "--no-reflection" }, description = "disable reflection")
-  private boolean disableReflection;
+  @Option(names = { "--reflection" }, description = "enable reflection (fast mode)")
+  private boolean enableReflection;
 
   @Option(
       names = { "-m", "--memorySize" },
