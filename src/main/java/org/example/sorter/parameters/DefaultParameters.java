@@ -1,10 +1,13 @@
 package org.example.sorter.parameters;
 
+import org.example.base.DataSize;
+
 public final class DefaultParameters {
 
-  public static final long RESERVED_FOR_SYSTEM_MEMORY_SIZE = 50L * 1024L * 1024L; // 50Mb
-  public static final long MIN_MEMORY_SIZE = RESERVED_FOR_SYSTEM_MEMORY_SIZE + 10L * 1024L * 1024L;
-  public static final long DEFAULT_AVG_STRING_MEMORY_SIZE = 5L * 1024L * 1024L; // 5Mb
+  public static final long RESERVED_FOR_SYSTEM_MEMORY_SIZE = DataSize.ofMegaBytes(50).toBytes();
+  public static final long MIN_MEMORY_SIZE =
+      RESERVED_FOR_SYSTEM_MEMORY_SIZE + DataSize.ofMegaBytes(10).toBytes();
+  public static final long DEFAULT_AVG_STRING_MEMORY_SIZE = DataSize.ofMegaBytes(5).toBytes();
   public static final int DEFAULT_AVAILABLE_CHUNKS = 32;
   public static final int MIN_AVAILABLE_CHUNKS = 3;
   public static final int DEFAULT_CHUNK_SIZE = 64;
