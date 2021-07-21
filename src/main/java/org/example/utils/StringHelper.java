@@ -44,7 +44,7 @@ public final class StringHelper {
       do {
         bound = buckets.poll();
 
-        // skip string with empty symbol
+        // find and skip strings with empty symbol at "position"-th position
         int from = bound.from;
         for (int i = bound.from; i < bound.to; i++) {
           if (values[i].length() <= position) {
