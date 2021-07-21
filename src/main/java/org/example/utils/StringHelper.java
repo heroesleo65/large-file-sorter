@@ -1,6 +1,7 @@
 package org.example.utils;
 
 import java.util.Arrays;
+import java.util.Comparator;
 
 public final class StringHelper {
 
@@ -43,20 +44,20 @@ public final class StringHelper {
       do {
         bound = buckets.poll();
 
-        Arrays.sort(values, bound.from, bound.to, (a, b) -> {
-          if (position >= a.length()) {
-            return position < b.length() ? -1 : 0;
+        // skip string with empty symbol
+        int from = bound.from;
+        for (int i = bound.from; i < bound.to; i++) {
+          if (values[i].length() <= position) {
+            var temp = values[from];
+            values[from] = values[i];
+            values[i] = temp;
+            from++;
           }
-          if (position >= b.length()) {
-            return 1;
-          }
-          return a.charAt(position) - b.charAt(position);
-        });
-
-        int prev = bound.from;
-        while (prev < bound.to && values[prev].length() <= position) {
-          prev++;
         }
+
+        Arrays.sort(values, from, bound.to, Comparator.comparingInt(a -> a.charAt(position)));
+
+        int prev = from;
         for (int i = prev + 1; i < bound.to; i++) {
           if (values[i].charAt(position) != values[prev].charAt(position)) {
             if (i - prev > 1) {
