@@ -74,10 +74,10 @@ class StringHelperTest {
   @ParameterizedTest
   @CsvSource({"small-input.txt", "middle-input.txt"})
   void radixSortDataFromFile(String resourceName) throws Exception {
-    String[] text = loadResource(resourceName).lines().toArray(String[]::new);
+    String[] lines = loadResource(resourceName).lines().toArray(String[]::new);
 
-    StringHelper.radixSort(text, 0, text.length);
-    assertThat(text).isSorted();
+    StringHelper.radixSort(lines, 0, lines.length);
+    assertThat(lines).isSorted();
   }
 
   @Test
