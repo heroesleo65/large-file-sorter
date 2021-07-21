@@ -1,8 +1,6 @@
 package org.example.utils;
 
-import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.Deque;
 
 public final class StringHelper {
 
@@ -34,22 +32,18 @@ public final class StringHelper {
     }
 
     // TODO: add comments for explanation
-    Deque<Long> buckets = new ArrayDeque<>();
-    buckets.add(NumberHelper.getLong(fromIndex, toIndex));
+    var buckets = new RadixSortBounds();
+    buckets.add(fromIndex, toIndex);
 
+    RadixSortBound bound;
     for (int length = 0; !buckets.isEmpty(); length++) {
-      int position = length; // for lambda function
+      final int position = length; // for lambda function
 
-      long lastValue = buckets.peekLast();
-      long value;
+      final int lastRightBound = buckets.getLastRightBound();
       do {
-        //noinspection ConstantConditions
-        value = buckets.pollFirst(); // value always exists
+        bound = buckets.poll();
 
-        int from = NumberHelper.getHiInt(value);
-        int to = NumberHelper.getLowInt(value);
-
-        Arrays.sort(values, from, to, (a, b) -> {
+        Arrays.sort(values, bound.from, bound.to, (a, b) -> {
           if (position >= a.length()) {
             return position < b.length() ? -1 : 0;
           }
@@ -59,22 +53,22 @@ public final class StringHelper {
           return a.charAt(position) - b.charAt(position);
         });
 
-        int prev = from;
-        while (prev < to && values[prev].length() <= position) {
+        int prev = bound.from;
+        while (prev < bound.to && values[prev].length() <= position) {
           prev++;
         }
-        for (int i = prev + 1; i < to; i++) {
+        for (int i = prev + 1; i < bound.to; i++) {
           if (values[i].charAt(position) != values[prev].charAt(position)) {
             if (i - prev > 1) {
-              buckets.addLast(NumberHelper.getLong(prev, i));
+              buckets.add(prev, i);
             }
             prev = i;
           }
         }
-        if (to - prev > 1) {
-          buckets.addLast(NumberHelper.getLong(prev, to));
+        if (bound.to - prev > 1) {
+          buckets.add(prev, bound.to);
         }
-      } while (lastValue != value);
+      } while (lastRightBound != bound.to);
     }
   }
 
@@ -86,5 +80,78 @@ public final class StringHelper {
       buffer.append((char) ((values[i] << 8) + (values[i + 1])));
     }
     return buffer.toString();
+  }
+
+  private static class RadixSortBound {
+    private final int from;
+    private final int to;
+
+    public RadixSortBound(int from, int to) {
+      this.from = from;
+      this.to = to;
+    }
+  }
+
+  private static class RadixSortBounds {
+    private long[] bounds;
+    private int head;
+    private int tail;
+
+    public RadixSortBounds() {
+      bounds = new long[1];
+    }
+
+    public void add(int from, int to) {
+      bounds[tail] = NumberHelper.getLong(from, to);
+      if (head == (tail = inc(tail, bounds.length))) {
+        grow();
+      }
+    }
+
+    public RadixSortBound poll() {
+      var value = bounds[head];
+      if (tail == (head = inc(head, bounds.length))) {
+        head = 0;
+        tail = 0;
+      }
+      return new RadixSortBound(NumberHelper.getHiInt(value), NumberHelper.getLowInt(value));
+    }
+
+    public int getLastRightBound() {
+      var value = bounds[dec(tail, bounds.length)];
+      return NumberHelper.getLowInt(value);
+    }
+
+    public boolean isEmpty() {
+      return head == tail;
+    }
+
+    private void grow() {
+      final int oldCapacity = bounds.length;
+      int jump = (oldCapacity < 64) ? (oldCapacity + 2) : (oldCapacity >> 1);
+      int newCapacity = oldCapacity + jump;
+
+      final long[] bs = new long[newCapacity];
+      System.arraycopy(bounds, head, bs, 0, bounds.length - head);
+      System.arraycopy(bounds, 0, bs, bounds.length - head, head);
+
+      head = 0;
+      tail = bounds.length;
+      bounds = bs;
+    }
+
+    private static int dec(int value, int module) {
+      if (--value < 0) {
+        value = module - 1;
+      }
+      return value;
+    }
+
+    private static int inc(int value, int module) {
+      if (++value >= module) {
+        value = 0;
+      }
+      return value;
+    }
   }
 }
