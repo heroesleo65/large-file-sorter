@@ -1,9 +1,9 @@
 package org.example.sorter.chunks;
 
+import java.util.Arrays;
 import lombok.extern.log4j.Log4j2;
 import org.example.context.ApplicationContext;
 import org.example.sorter.SortableOutputChunk;
-import org.example.utils.StringHelper;
 
 @Log4j2
 public class OutputUnsortedChunk extends AbstractBinaryOutputChunk implements SortableOutputChunk {
@@ -18,6 +18,6 @@ public class OutputUnsortedChunk extends AbstractBinaryOutputChunk implements So
 
   @Override
   public void sort() {
-    StringHelper.radixSort(data, cursor, size);
+    Arrays.sort(data, cursor, size);
   }
 }
