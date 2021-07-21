@@ -72,7 +72,7 @@ class StringHelperTest {
   }
 
   @ParameterizedTest
-  @CsvSource({"small-input.txt", "middle-input.txt"})
+  @CsvSource({"small-input.txt", "middle-input.txt", "small-count-symbols-middle-input.txt"})
   void radixSortDataFromFile(String resourceName) throws Exception {
     String[] lines = loadResource(resourceName).lines().toArray(String[]::new);
 
