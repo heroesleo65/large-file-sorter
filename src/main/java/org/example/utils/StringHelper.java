@@ -33,20 +33,18 @@ public final class StringHelper {
     }
 
     // TODO: add comments for explanation
-    var buckets = new RadixSortBounds();
-    buckets.add(fromIndex, toIndex);
-
-    RadixSortBound bound;
+    var buckets = new RadixSortBounds(fromIndex, toIndex);
     for (int length = 0; !buckets.isEmpty(); length++) {
       final int position = length; // for lambda function
 
-      final int lastRightBound = buckets.getLastRightBound();
+      final int lastRightBound = buckets.peekLastValue();
+      int from, to;
       do {
-        bound = buckets.poll();
+        from = buckets.poll();
+        to = buckets.poll();
 
         // find and skip strings with empty symbol at "position"-th position
-        int from = bound.from;
-        for (int i = bound.from; i < bound.to; i++) {
+        for (int i = from; i < to; i++) {
           if (values[i].length() <= position) {
             var temp = values[from];
             values[from] = values[i];
@@ -55,21 +53,26 @@ public final class StringHelper {
           }
         }
 
-        Arrays.sort(values, from, bound.to, Comparator.comparingInt(a -> a.charAt(position)));
+        Arrays.sort(values, from, to, Comparator.comparingInt(a -> a.charAt(position)));
 
-        int prev = from;
-        for (int i = prev + 1; i < bound.to; i++) {
-          if (values[i].charAt(position) != values[prev].charAt(position)) {
-            if (i - prev > 1) {
-              buckets.add(prev, i);
+        char prevChar = values[from].charAt(position);
+        for (int i = from + 1; i < to; i++) {
+          char curChar = values[i].charAt(position);
+          if (curChar == prevChar) {
+            for (i++; i < to; i++) {
+              curChar = values[i].charAt(position);
+              if (curChar != prevChar) {
+                break;
+              }
             }
-            prev = i;
+            buckets.offer(from);
+            buckets.offer(i);
           }
+
+          prevChar = curChar;
+          from = i;
         }
-        if (bound.to - prev > 1) {
-          buckets.add(prev, bound.to);
-        }
-      } while (lastRightBound != bound.to);
+      } while (lastRightBound != to);
     }
   }
 
@@ -83,44 +86,34 @@ public final class StringHelper {
     return buffer.toString();
   }
 
-  private static class RadixSortBound {
-    private final int from;
-    private final int to;
-
-    public RadixSortBound(int from, int to) {
-      this.from = from;
-      this.to = to;
-    }
-  }
-
   private static class RadixSortBounds {
-    private long[] bounds;
+    private int[] bounds;
     private int head;
     private int tail;
 
-    public RadixSortBounds() {
-      bounds = new long[16];
+    public RadixSortBounds(int from, int to) {
+      bounds = new int[16];
+      bounds[0] = from;
+      bounds[1] = to;
+      head = 0;
+      tail = 2;
     }
 
-    public void add(int from, int to) {
-      bounds[tail] = NumberHelper.getLong(from, to);
+    public void offer(int value) {
+      bounds[tail] = value;
       if (head == (tail = inc(tail, bounds.length))) {
         grow();
       }
     }
 
-    public RadixSortBound poll() {
+    public int poll() {
       var value = bounds[head];
-      if (tail == (head = inc(head, bounds.length))) {
-        head = 0;
-        tail = 0;
-      }
-      return new RadixSortBound(NumberHelper.getHiInt(value), NumberHelper.getLowInt(value));
+      head = inc(head, bounds.length);
+      return value;
     }
 
-    public int getLastRightBound() {
-      var value = bounds[dec(tail, bounds.length)];
-      return NumberHelper.getLowInt(value);
+    public int peekLastValue() {
+      return bounds[dec(tail, bounds.length)];
     }
 
     public boolean isEmpty() {
@@ -132,7 +125,7 @@ public final class StringHelper {
       int jump = (oldCapacity < 64) ? (oldCapacity + 2) : (oldCapacity >> 1);
       int newCapacity = oldCapacity + jump;
 
-      final long[] bs = new long[newCapacity];
+      final int[] bs = new int[newCapacity];
       System.arraycopy(bounds, head, bs, 0, bounds.length - head);
       System.arraycopy(bounds, 0, bs, bounds.length - head, head);
 
