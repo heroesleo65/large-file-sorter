@@ -98,7 +98,7 @@ public final class StringHelper {
     private int tail;
 
     public RadixSortBounds() {
-      bounds = new long[1];
+      bounds = new long[16];
     }
 
     public void add(int from, int to) {
