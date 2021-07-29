@@ -116,8 +116,6 @@ public class InputSortedChunk extends AbstractInputChunk {
 
   private void fileNotFound() {
     log.error("File '{}' was removed", inputFile);
-
-    // We don't delete not own file
     attributes = LOADED_FILE_ATTRIBUTE;
   }
 
