@@ -44,9 +44,9 @@ public class FinalOutputChunk extends AbstractOutputChunk {
   }
 
   @Override
-  public void save() {
+  protected void save(String[] data, int from, int to) {
     try (var stream = context.getStreamFactory().getOutputStream(outputFile)) {
-      for (int i = 0; i < size; i++) {
+      for (int i = from; i < to; i++) {
         var bytes = data[i].getBytes(charset);
         stream.write(bytes);
         stream.write(newLineBytes);
@@ -55,7 +55,5 @@ public class FinalOutputChunk extends AbstractOutputChunk {
       log.error(() -> "Can't save data in file '" + outputFile + "'", ex);
       context.sendSignal(ex);
     }
-
-    clear();
   }
 }

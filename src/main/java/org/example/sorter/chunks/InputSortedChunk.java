@@ -4,6 +4,7 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.function.BiPredicate;
 import lombok.extern.log4j.Log4j2;
 import org.example.context.ApplicationContext;
 
@@ -35,9 +36,18 @@ public class InputSortedChunk extends AbstractInputChunk {
     var result = super.pop();
     if (result == null) {
       setLoadedFile();
-      deleteTemporaryFile();
+      freeResources();
     }
     return result;
+  }
+
+  @Override
+  protected void freeResources() {
+    if (isDeleteOnExit()) {
+      if (!context.getFileSystemContext().delete(inputFile)) {
+        log.error("Can't delete file '{}'", inputFile);
+      }
+    }
   }
 
   @Override
@@ -102,7 +112,47 @@ public class InputSortedChunk extends AbstractInputChunk {
     return false;
   }
 
-  public void setDeleteOnExit(boolean value) {
+  protected boolean loadData(int bufferSize, BiPredicate<byte[], Integer> action) {
+    if (!hasAccessToFile()) {
+      return false;
+    }
+
+    try (var file = context.getStreamFactory().getRandomAccessInputStream(inputFile)) {
+      if (position >= file.length()) {
+        return false;
+      }
+      file.seek(position);
+
+      final byte[] buffer = new byte[bufferSize];
+      int bufLen;
+      while ((bufLen = file.read(buffer, 0, bufferSize)) == bufferSize) {
+        if (!action.test(buffer, bufLen)) {
+          return false;
+        }
+      }
+      if (bufLen > 0 && !action.test(buffer, bufLen)) {
+        return false;
+      }
+
+      position = file.getFilePointer();
+      return true;
+    } catch (FileNotFoundException ex) {
+      fileNotFound();
+    } catch (IOException ex) {
+      if (ex instanceof EOFException) {
+        log.error("Unexpected end of file '{}'", inputFile);
+      } else {
+        log.error(() -> "Can't load file '" + inputFile + "'", ex);
+      }
+
+      position = Long.MAX_VALUE;
+      context.sendSignal(ex);
+    }
+
+    return false;
+  }
+
+  private void setDeleteOnExit(boolean value) {
     if (value) {
       attributes |= DELETE_ON_EXIT_ATTRIBUTE;
     } else {
@@ -153,13 +203,5 @@ public class InputSortedChunk extends AbstractInputChunk {
     }
 
     return true;
-  }
-
-  private void deleteTemporaryFile() {
-    if (isDeleteOnExit()) {
-      if (!context.getFileSystemContext().delete(inputFile)) {
-        log.error("Can't delete file '{}'", inputFile);
-      }
-    }
   }
 }

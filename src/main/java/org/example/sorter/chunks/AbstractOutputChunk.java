@@ -23,6 +23,18 @@ public abstract class AbstractOutputChunk implements OutputChunk {
   }
 
   @Override
+  public void save() {
+    save(data, 0, size);
+
+    // clear
+    cursor = 0;
+    size = 0;
+    Arrays.fill(data, null); // for GC
+  }
+
+  protected abstract void save(String[] data, int from, int to);
+
+  @Override
   public boolean add(String line) {
     if (size < data.length) {
       data[size++] = line;
@@ -43,18 +55,23 @@ public abstract class AbstractOutputChunk implements OutputChunk {
 
   @Override
   public void copyAndSave(InputChunk inputChunk) {
-    var data = inputChunk.pop();
-    while (data != null) {
-      add(data);
-      data = inputChunk.pop();
+    if (inputChunk instanceof AbstractInputChunk) {
+      save();
+
+      var anotherChunk = (AbstractInputChunk) inputChunk;
+      while (anotherChunk.nextLoad()) {
+        save(anotherChunk.data, anotherChunk.cursor, anotherChunk.size);
+        anotherChunk.cursor = anotherChunk.size;
+      }
+      anotherChunk.freeResources();
+    } else {
+      var data = inputChunk.pop();
+      while (data != null) {
+        add(data);
+        data = inputChunk.pop();
+      }
+
+      save();
     }
-
-    save();
-  }
-
-  protected void clear() {
-    cursor = 0;
-    size = 0;
-    Arrays.fill(data, null); // for GC
   }
 }

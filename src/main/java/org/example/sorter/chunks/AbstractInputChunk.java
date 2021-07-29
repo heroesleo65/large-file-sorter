@@ -22,19 +22,25 @@ public abstract class AbstractInputChunk implements InputChunk {
 
   @Override
   public String pop() {
-    if (size <= cursor) {
-      cursor = 0;
-      size = 0;
+    return nextLoad() ? take(cursor++) : null;
+  }
 
-      var loaded = load();
-
-      Arrays.fill(data, size, data.length, null); // for GC
-
-      if (!loaded || size == 0) {
-        return null;
-      }
+  boolean nextLoad() {
+    if (cursor < size) {
+      return true;
     }
-    return take(cursor++);
+
+    cursor = 0;
+    size = 0;
+
+    var loaded = load();
+
+    Arrays.fill(data, size, data.length, null); // for GC
+
+    return loaded && size != 0;
+  }
+
+  protected void freeResources() {
   }
 
   private String take(int position) {
