@@ -58,7 +58,7 @@ public abstract class AbstractBinaryOutputChunk extends AbstractOutputChunk {
           }
           writeData(stream, line, chars, bytes);
         } else {
-          StreamHelper.writeInt(stream, value.length);
+          StreamHelper.writeVarint32(stream, value.length);
           stream.write(value);
         }
       }
@@ -74,7 +74,7 @@ public abstract class AbstractBinaryOutputChunk extends AbstractOutputChunk {
   private void writeData(
       OutputStream stream, String line, char[] chars, byte[] bytes
   ) throws IOException {
-    StreamHelper.writeInt(stream, 2 * line.length());
+    StreamHelper.writeVarint32(stream, 2 * line.length());
 
     int count;
     int offset = 0;

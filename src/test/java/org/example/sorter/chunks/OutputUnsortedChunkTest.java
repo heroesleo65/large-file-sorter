@@ -164,7 +164,7 @@ class OutputUnsortedChunkTest {
     var result = new ByteArrayOutputStream();
     for (var line : lines) {
       result.write(coder);
-      StreamHelper.writeInt(result, lengthFun.apply(line));
+      StreamHelper.writeVarint32(result, lengthFun.apply(line));
       result.write(codes.get(line));
     }
     return result.toByteArray();

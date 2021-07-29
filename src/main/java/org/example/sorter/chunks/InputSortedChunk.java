@@ -52,15 +52,23 @@ public class InputSortedChunk extends AbstractInputChunk {
       }
       file.seek(position);
 
+      // MetaData:
+      // first byte - coder
+      // second byte - first byte of len of string in bytes which decoded as 128 Base varint
+      var metaData = new byte[2];
+
       var values = new byte[0];
       var builder = new StringBuilder(0);
       while (size < data.length) {
-        int coder = file.read();
-        if (coder < 0) {
+        int count = file.read(metaData, 0, 2);
+        if (count <= 0) {
           break;
         }
+        if (count < 2) {
+          throw new EOFException();
+        }
 
-        var len = file.readInt();
+        int len = file.readVarint32(metaData[1]);
         if (len < 0) {
           throw new IOException("Negative length was loaded");
         }
@@ -69,11 +77,11 @@ public class InputSortedChunk extends AbstractInputChunk {
         if (context.getStringContext().hasSupportReflection() || values.length < len) {
           values = new byte[len];
         }
-        file.read(values, 0, len);
+        if (file.read(values, 0, len) != len) {
+          throw new EOFException();
+        }
 
-        data[size++] = context.getStringContext().createString(
-            values, (byte) (coder & 0xFF), len, builder
-        );
+        data[size++] = context.getStringContext().createString(values, metaData[0], len, builder);
       }
 
       position = file.getFilePointer();

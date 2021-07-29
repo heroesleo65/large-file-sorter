@@ -1,8 +1,6 @@
 package org.example.io;
 
 import java.io.ByteArrayInputStream;
-import java.io.EOFException;
-import java.io.IOException;
 
 public class MockRandomAccessInputStream extends ByteArrayInputStream
     implements RandomAccessInputStream {
@@ -30,16 +28,5 @@ public class MockRandomAccessInputStream extends ByteArrayInputStream
       throw new IllegalArgumentException("Too big value pos");
     }
     this.pos = (int) pos;
-  }
-
-  @Override
-  public synchronized int readInt() throws IOException {
-    int ch1 = this.read();
-    int ch2 = this.read();
-    int ch3 = this.read();
-    int ch4 = this.read();
-    if ((ch1 | ch2 | ch3 | ch4) < 0)
-      throw new EOFException();
-    return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
   }
 }

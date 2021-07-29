@@ -9,10 +9,19 @@ public final class StreamHelper {
     throw new UnsupportedOperationException("StreamHelper is utility");
   }
 
-  public static void writeInt(OutputStream stream, int value) throws IOException {
-    stream.write((byte) ((value >>> 24) & 0xFF));
-    stream.write((byte) ((value >>> 16) & 0xFF));
-    stream.write((byte) ((value >>> 8) & 0xFF));
-    stream.write((byte) ((value >>> 0) & 0xFF));
+  /**
+   * Write integer to stream as "Base 128 Varints"
+   * (https://developers.google.com/protocol-buffers/docs/encoding)
+   */
+  public static void writeVarint32(OutputStream stream, int value) throws IOException {
+    while (true) {
+      if ((value & ~0x7F) == 0) {
+        stream.write((byte) value);
+        return;
+      } else {
+        stream.write((byte) ((value & 0x7F) | 0x80));
+        value >>>= 7;
+      }
+    }
   }
 }
