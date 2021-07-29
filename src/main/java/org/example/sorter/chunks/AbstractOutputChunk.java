@@ -1,8 +1,9 @@
 package org.example.sorter.chunks;
 
 import java.util.Arrays;
+import java.util.function.Predicate;
+import org.example.sorter.InputChunk;
 import org.example.sorter.OutputChunk;
-import org.example.utils.StringHelper;
 
 public abstract class AbstractOutputChunk implements OutputChunk {
 
@@ -28,6 +29,27 @@ public abstract class AbstractOutputChunk implements OutputChunk {
       return true;
     }
     return false;
+  }
+
+  @Override
+  public String copyUtil(InputChunk inputChunk, Predicate<String> predicate) {
+    var data = inputChunk.pop();
+    while (data != null && predicate.test(data)) {
+      add(data);
+      data = inputChunk.pop();
+    }
+    return data;
+  }
+
+  @Override
+  public void copyAndSave(InputChunk inputChunk) {
+    var data = inputChunk.pop();
+    while (data != null) {
+      add(data);
+      data = inputChunk.pop();
+    }
+
+    save();
   }
 
   protected void clear() {
