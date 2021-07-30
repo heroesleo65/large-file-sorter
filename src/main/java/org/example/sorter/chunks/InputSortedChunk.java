@@ -64,7 +64,7 @@ public class InputSortedChunk extends AbstractInputChunk {
 
       // MetaData:
       // first byte - coder
-      // second byte - first byte of len of string in bytes which decoded as 128 Base varint
+      // second byte - first decoded byte from len of string as 128 Base varint
       var metaData = new byte[2];
 
       var values = new byte[0];
@@ -124,14 +124,11 @@ public class InputSortedChunk extends AbstractInputChunk {
       file.seek(position);
 
       final byte[] buffer = new byte[bufferSize];
-      int bufLen;
-      while ((bufLen = file.read(buffer, 0, bufferSize)) == bufferSize) {
-        if (!action.test(buffer, bufLen)) {
+      int count;
+      while ((count = file.read(buffer, 0, bufferSize)) > 0) {
+        if (!action.test(buffer, count)) {
           return false;
         }
-      }
-      if (bufLen > 0 && !action.test(buffer, bufLen)) {
-        return false;
       }
 
       position = file.getFilePointer();
