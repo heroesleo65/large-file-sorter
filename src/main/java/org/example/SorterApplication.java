@@ -5,6 +5,7 @@ import static org.example.sorter.parameters.DefaultParameters.MIN_CHUNK_SIZE;
 import static org.example.sorter.parameters.DefaultParameters.MIN_MEMORY_SIZE;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -44,6 +45,9 @@ public class SorterApplication {
     var chunkSize = sorterCommand.getStringsCount();
     var bufferSize = sorterCommand.getBufferSize();
     var memorySize = sorterCommand.getMemorySize();
+    Comparator<String> comparator = sorterCommand.isIgnoreCase()
+        ? String.CASE_INSENSITIVE_ORDER
+        : Comparator.naturalOrder();
 
     var context = new DefaultApplicationContext(
         /* prefixTemporaryDirectory = */ null, sorterCommand.isEnableReflection()
@@ -53,7 +57,7 @@ public class SorterApplication {
       var parameters = new ChunkParameters(
           availableChunks, chunkSize, bufferSize, memorySize, formula
       );
-      fileSorter.sort(parameters, output, outputCharset);
+      fileSorter.sort(parameters, comparator, output, outputCharset);
     } catch (InterruptedException ex) {
       TerminalHelper.forceCloseTerminal();
     } catch (Exception ex) {

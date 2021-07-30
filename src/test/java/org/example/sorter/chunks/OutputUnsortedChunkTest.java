@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +67,7 @@ class OutputUnsortedChunkTest {
 
     var codes = initFullValueArrayStringContext(stringContext, lines);
 
-    var chunk = new OutputUnsortedChunk(0, chunkSize, context);
+    var chunk = new OutputUnsortedChunk(0, chunkSize, Comparator.naturalOrder(), context);
     for (var line : lines) {
       chunk.add(line);
     }
@@ -100,7 +101,7 @@ class OutputUnsortedChunkTest {
 
     var codes = initPartValueArrayStringContext(stringContext, lines);
 
-    var chunk = new OutputUnsortedChunk(0, chunkSize, context);
+    var chunk = new OutputUnsortedChunk(0, chunkSize, Comparator.naturalOrder(), context);
     for (var line : lines) {
       chunk.add(line);
     }

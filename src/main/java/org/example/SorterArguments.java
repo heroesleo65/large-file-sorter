@@ -56,6 +56,9 @@ public class SorterArguments {
   @Option(names = {"--reflection"}, description = "enable reflection (fast mode)")
   private boolean enableReflection;
 
+  @Option(names = {"-I", "--ignore-case"}, description = "ignore case in compare of two strings")
+  private boolean ignoreCase;
+
   @Option(
       names = {"-m", "--memorySize"},
       description = "calculate 'chunks' and 'strings' using memorySize (memorySize in bytes)"

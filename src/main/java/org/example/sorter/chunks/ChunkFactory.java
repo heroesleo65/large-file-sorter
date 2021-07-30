@@ -2,45 +2,34 @@ package org.example.sorter.chunks;
 
 import java.io.File;
 import java.nio.charset.Charset;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Comparator;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.example.context.ApplicationContext;
-import org.example.sorter.parameters.ChunkParameters;
 import org.example.sorter.InputChunk;
 import org.example.sorter.OutputChunk;
 import org.example.sorter.SortableOutputChunk;
+import org.example.sorter.parameters.ChunkParameters;
 
+@RequiredArgsConstructor
 public class ChunkFactory {
   private final File outputFile;
   private final Charset charset;
   private final ChunkParameters chunkParameters;
+  @Getter
+  private final Comparator<String> comparator;
   private final ApplicationContext context;
-  private final AtomicReference<SortableOutputChunk> cacheOutputUnsortedChunk;
-
-  public ChunkFactory(
-      File outputFile, Charset charset, ChunkParameters chunkParameters, ApplicationContext context
-  ) {
-    this.outputFile = outputFile;
-    this.charset = charset;
-    this.chunkParameters = chunkParameters;
-    this.context = context;
-    this.cacheOutputUnsortedChunk = new AtomicReference<>();
-  }
 
   public InputChunk createInputSortedChunk(int chunkId) {
     return new InputSortedChunk(chunkId, chunkParameters.getChunkSize(), context);
   }
 
   public SortableOutputChunk createSortableOutputChunk() {
-    var chunk = cacheOutputUnsortedChunk.getAndSet(null);
-    if (chunk != null) {
-      chunk.setId(context.getFileSystemContext().nextTemporaryFile());
-      return chunk;
-    }
-
     return new OutputUnsortedChunk(
         context.getFileSystemContext().nextTemporaryFile(),
         chunkParameters.getChunkSize(),
         chunkParameters.getBufferSize(),
+        comparator,
         context
     );
   }
@@ -59,8 +48,5 @@ public class ChunkFactory {
   }
 
   public void onFinishOutputChunkEvent(OutputChunk chunk) {
-    if (chunk instanceof SortableOutputChunk) {
-      cacheOutputUnsortedChunk.set((SortableOutputChunk) chunk);
-    }
   }
 }

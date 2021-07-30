@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -58,8 +59,9 @@ public class FileSorter implements Closeable {
     }
   }
 
-  public void sort(ChunkParameters chunkParameters, Path output, Charset charset)
-      throws InterruptedException {
+  public void sort(
+      ChunkParameters chunkParameters, Comparator<String> comparator, Path output, Charset charset
+  ) throws InterruptedException {
     if (chunkParameters.getAvailableChunks() < MIN_AVAILABLE_CHUNKS) {
       throw new IllegalArgumentException(
           String.format("availableChunks must be greater than or equal to %d", MIN_AVAILABLE_CHUNKS)
@@ -85,7 +87,9 @@ public class FileSorter implements Closeable {
       );
 
       var outputFile = output.toFile();
-      var chunkFactory = new ChunkFactory(outputFile, charset, chunkParameters, context);
+      var chunkFactory = new ChunkFactory(
+          outputFile, charset, chunkParameters, comparator, context
+      );
 
       int chunksCount = sortChunks(
           chunksForProcessing,
@@ -301,10 +305,11 @@ public class FileSorter implements Closeable {
     protected void merge(
         OutputChunk outputChunk,
         InputChunk[] chunks,
+        Comparator<String> comparator,
         Runnable counterAction,
         ProgressBar progressBar
     ) {
-      var merger = new ChunksMerger(outputChunk);
+      var merger = new ChunksMerger(outputChunk, comparator);
       merger.merge(chunks);
 
       counterAction.run();
@@ -325,7 +330,7 @@ public class FileSorter implements Closeable {
     public void run() {
       var outputChunk = chunkFactory.createTemporaryOutputSortedChunk();
 
-      merge(outputChunk, chunks, counterAction, progressBar);
+      merge(outputChunk, chunks, chunkFactory.getComparator(), counterAction, progressBar);
 
       bag.add(outputChunk.getId());
     }
@@ -343,7 +348,7 @@ public class FileSorter implements Closeable {
     public void run() {
       var outputChunk = chunkFactory.createFinalOutputSortedChunk();
 
-      merge(outputChunk, chunks, counterAction, progressBar);
+      merge(outputChunk, chunks, chunkFactory.getComparator(), counterAction, progressBar);
     }
   }
 

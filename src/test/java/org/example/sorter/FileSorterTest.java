@@ -17,6 +17,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -70,6 +71,7 @@ class FileSorterTest {
       boolean reflectionFlag
   ) throws Exception {
     String text = loadResource(resourceName);
+    Comparator<String> comparator = Comparator.naturalOrder();
 
     var input = Path.of("input");
     var output = Path.of("output");
@@ -126,7 +128,7 @@ class FileSorterTest {
       var parameters = new ChunkParameters(
           availableChunks, chunkSize, bufferSize, null, formula
       );
-      sorter.sort(parameters, output, UTF_8);
+      sorter.sort(parameters, comparator, output, UTF_8);
     }
 
     if (reflectionFlag != stringContext.hasSupportReflection()) {
@@ -139,7 +141,7 @@ class FileSorterTest {
 
     var actual = resultOutputStream.toString(UTF_8).lines().collect(toList());
 
-    assertThat(actual).isSortedAccordingTo(String::compareTo).hasSize((int) text.lines().count());
+    assertThat(actual).isSortedAccordingTo(comparator).hasSize((int) text.lines().count());
   }
 
   private String loadResource(String name) throws IOException {

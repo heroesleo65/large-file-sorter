@@ -1,5 +1,6 @@
 package org.example.sorter;
 
+import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import lombok.AllArgsConstructor;
@@ -7,7 +8,9 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class ChunksMerger {
+
   private final OutputChunk outputChunk;
+  private final Comparator<String> comparator;
 
   public void merge(InputChunk[] chunks) {
     if (chunks.length < 3) {
@@ -19,7 +22,9 @@ public class ChunksMerger {
       return;
     }
 
-    var priorityQueue = new PriorityQueue<QueueItem>(chunks.length);
+    var priorityQueue = new PriorityQueue<QueueItem>(
+        chunks.length, (a, b) -> comparator.compare(a.data, b.data)
+    );
 
     for (int i = 0; i < chunks.length; i++) {
       var data = chunks[i].pop();
@@ -54,7 +59,9 @@ public class ChunksMerger {
           var data = item.data;
 
           outputChunk.add(data);
-          data = outputChunk.copyWithSaveUtil(chunks[item.index], v -> v.compareTo(nextString) < 0);
+          data = outputChunk.copyWithSaveUtil(
+              chunks[item.index], v -> comparator.compare(v, nextString) < 0
+          );
           if (data != null) {
             item.data = data;
             priorityQueue.add(item);
@@ -101,7 +108,7 @@ public class ChunksMerger {
     var firstString = firstStringOfFirstChunk;
     var secondString = firstStringOfSecondChunk;
 
-    if (secondString.compareTo(firstString) < 0) {
+    if (comparator.compare(secondString, firstString) < 0) {
       secondString = copyUtilHasOrder(secondString, firstString, secondChunk, firstChunk);
       if (secondString == null) {
         return;
@@ -125,7 +132,9 @@ public class ChunksMerger {
       final InputChunk lsChunk, final InputChunk gtChunk
   ) {
     outputChunk.add(lsString);
-    var nextString = outputChunk.copyWithSaveUtil(lsChunk, v -> v.compareTo(gtString) < 0);
+    var nextString = outputChunk.copyWithSaveUtil(
+        lsChunk, v -> comparator.compare(v, gtString) < 0
+    );
     if (nextString == null) {
       outputChunk.add(gtString);
       outputChunk.copyAndSave(gtChunk);
@@ -134,14 +143,9 @@ public class ChunksMerger {
   }
 
   @AllArgsConstructor
-  private static class QueueItem implements Comparable<QueueItem> {
+  private static class QueueItem {
     private String data;
 
     private final int index;
-
-    @Override
-    public int compareTo(QueueItem other) {
-      return data.compareTo(other.data);
-    }
   }
 }
