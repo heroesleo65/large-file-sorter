@@ -5,19 +5,18 @@ import java.io.OutputStream;
 import lombok.extern.log4j.Log4j2;
 import org.example.context.ApplicationContext;
 import org.example.sorter.InputChunk;
+import org.example.sorter.parameters.DefaultParameters;
 import org.example.utils.StreamHelper;
 
 @Log4j2
 public abstract class AbstractBinaryOutputChunk extends AbstractOutputChunk {
-
-  private static final int DEFAULT_BUFFER_SIZE = 128;
 
   private int id;
   private final int bufferSize;
   private final ApplicationContext context;
 
   public AbstractBinaryOutputChunk(int id, int chunkSize, ApplicationContext context) {
-    this(id, chunkSize, DEFAULT_BUFFER_SIZE, context);
+    this(id, chunkSize, DefaultParameters.DEFAULT_BUFFER_SIZE, context);
   }
 
   public AbstractBinaryOutputChunk(
