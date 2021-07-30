@@ -44,19 +44,24 @@ public abstract class AbstractOutputChunk implements OutputChunk {
     if (inputChunk instanceof AbstractInputChunk) {
       var anotherChunk = (AbstractInputChunk) inputChunk;
       while (anotherChunk.nextLoad()) {
-        for (int i = anotherChunk.cursor; i < anotherChunk.size; i++) {
-          if (!predicate.test(anotherChunk.data[i])) {
-            int count = i - anotherChunk.cursor;
+        if (!predicate.test(anotherChunk.data[anotherChunk.size - 1])) {
+          int position = anotherChunk.cursor;
+          while (predicate.test(anotherChunk.data[position])) {
+            position++;
+          }
+
+          int count = position - anotherChunk.cursor;
+          if (count != 0) {
             if (size + count < data.length) {
               System.arraycopy(anotherChunk.data, anotherChunk.cursor, data, size, count);
               size += count;
             } else {
               save();
-              save(anotherChunk.data, anotherChunk.cursor, i);
+              save(anotherChunk.data, anotherChunk.cursor, position);
             }
-            anotherChunk.cursor = i + 1;
-            return anotherChunk.data[i];
           }
+          anotherChunk.cursor = position + 1;
+          return anotherChunk.data[position];
         }
         save();
         save(anotherChunk.data, anotherChunk.cursor, anotherChunk.size);
