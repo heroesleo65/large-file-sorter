@@ -24,12 +24,14 @@ public abstract class AbstractOutputChunk implements OutputChunk {
 
   @Override
   public void save() {
-    save(data, 0, size);
+    if (size != 0) {
+      save(data, 0, size);
 
-    // clear
-    cursor = 0;
-    size = 0;
-    Arrays.fill(data, null); // for GC
+      // clear
+      cursor = 0;
+      size = 0;
+      Arrays.fill(data, null); // for GC
+    }
   }
 
   protected abstract void save(String[] data, int from, int to);

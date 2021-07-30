@@ -41,36 +41,34 @@ public abstract class AbstractBinaryOutputChunk extends AbstractOutputChunk {
 
   @Override
   protected void save(String[] data, int from, int to) {
-    if (to <= from) {
-      return;
+    try (var stream = context.getOutputStream(id)) {
+      save(stream, data, from, to);
+    } catch (IOException ex) {
+      failSaveToFile(ex);
     }
+  }
 
+  private void save(OutputStream stream, String[] data, int from, int to) throws IOException {
     char[] chars = null;
     byte[] bytes = null;
-    try (var stream = context.getOutputStream(id)) {
-      for (int i = from; i < to; i++) {
-        var line = data[i];
+    for (int i = from; i < to; i++) {
+      var line = data[i];
 
-        stream.write(context.getStringContext().getCoder(line));
+      stream.write(context.getStringContext().getCoder(line));
 
-        var value = context.getStringContext().getValueArray(line);
-        if (value == null) {
-          if (chars == null) {
-            chars = new char[bufferSize];
-          }
-          if (bytes == null) {
-            bytes = new byte[2 * bufferSize];
-          }
-          writeData(stream, line, chars, bytes);
-        } else {
-          StreamHelper.writeVarint32(stream, value.length);
-          stream.write(value);
+      var value = context.getStringContext().getValueArray(line);
+      if (value == null) {
+        if (chars == null) {
+          chars = new char[bufferSize];
         }
+        if (bytes == null) {
+          bytes = new byte[2 * bufferSize];
+        }
+        writeData(stream, line, chars, bytes);
+      } else {
+        StreamHelper.writeVarint32(stream, value.length);
+        stream.write(value);
       }
-    } catch (IOException ex) {
-      var file = context.getFileSystemContext().getTemporaryFile(id);
-      log.error(() -> "Can't save file to temporary file '" + file + "'", ex);
-      context.sendSignal(ex);
     }
   }
 
@@ -81,12 +79,13 @@ public abstract class AbstractBinaryOutputChunk extends AbstractOutputChunk {
 
       var anotherChunk = (InputSortedChunk) inputChunk;
       if (anotherChunk.nextLoad()) {
-        save(anotherChunk.data, anotherChunk.cursor, anotherChunk.size);
-        anotherChunk.cursor = anotherChunk.size;
-
         // Copy directly binary data from anotherChunk to this chunk
         try (var stream = context.getOutputStream(id)) {
           final var monitoring = new CopyFileMonitoring();
+
+          save(stream, anotherChunk.data, anotherChunk.cursor, anotherChunk.size);
+          anotherChunk.cursor = anotherChunk.size;
+
           anotherChunk.loadData(bufferSize, (bytes, len) -> {
             try {
               stream.write(bytes, 0, len);
@@ -98,10 +97,7 @@ public abstract class AbstractBinaryOutputChunk extends AbstractOutputChunk {
           });
           monitoring.signal();
         } catch (IOException ex) {
-          var file = context.getFileSystemContext().getTemporaryFile(id);
-          log.error(() -> "Can't save file to temporary file '" + file + "'", ex);
-          context.sendSignal(ex);
-          return;
+          failSaveToFile(ex);
         }
       }
       anotherChunk.freeResources();
@@ -121,6 +117,12 @@ public abstract class AbstractBinaryOutputChunk extends AbstractOutputChunk {
       offset += count;
       stream.write(bytes, 0, 2 * count);
     }
+  }
+
+  private void failSaveToFile(IOException ex) {
+    var file = context.getFileSystemContext().getTemporaryFile(id);
+    log.error(() -> "Can't save file to temporary file '" + file + "'", ex);
+    context.sendSignal(ex);
   }
 
   private static class CopyFileMonitoring {
