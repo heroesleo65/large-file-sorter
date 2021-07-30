@@ -8,18 +8,16 @@ import org.example.sorter.OutputChunk;
 public abstract class AbstractOutputChunk implements OutputChunk {
 
   protected String[] data;
-  protected int cursor;
   protected int size;
 
   public AbstractOutputChunk(int cap) {
     this.data = new String[cap];
-    this.cursor = 0;
     this.size = 0;
   }
 
   @Override
   public boolean isEmpty() {
-    return cursor == size;
+    return size == 0;
   }
 
   @Override
@@ -28,7 +26,6 @@ public abstract class AbstractOutputChunk implements OutputChunk {
       save(data, 0, size);
 
       // clear
-      cursor = 0;
       size = 0;
       Arrays.fill(data, null); // for GC
     }
