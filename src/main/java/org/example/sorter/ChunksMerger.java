@@ -44,7 +44,7 @@ public class ChunksMerger {
         break;
       }
       default: {
-        while (true) {
+        do {
           var item = priorityQueue.poll();
 
           // objects can't be null because priorityQueue.size() > 3
@@ -62,10 +62,10 @@ public class ChunksMerger {
             chunks[item.index] = null; // for GC
             if (priorityQueue.size() == 2) {
               mergeOfTwoArrays(chunks, priorityQueue);
-              break;
+              return;
             }
           }
-        }
+        } while (true);
       }
     }
   }
@@ -102,25 +102,25 @@ public class ChunksMerger {
     var secondString = firstStringOfSecondChunk;
 
     if (secondString.compareTo(firstString) < 0) {
-      secondString = copyUtil(secondString, firstString, secondChunk, firstChunk);
+      secondString = copyUtilHasOrder(secondString, firstString, secondChunk, firstChunk);
       if (secondString == null) {
         return;
       }
     }
 
     do {
-      firstString = copyUtil(firstString, secondString, firstChunk, secondChunk);
+      firstString = copyUtilHasOrder(firstString, secondString, firstChunk, secondChunk);
       if (firstString == null) {
         return;
       }
-      secondString = copyUtil(secondString, firstString, secondChunk, firstChunk);
+      secondString = copyUtilHasOrder(secondString, firstString, secondChunk, firstChunk);
       if (secondString == null) {
         return;
       }
     } while (true);
   }
 
-  private String copyUtil(
+  private String copyUtilHasOrder(
       final String lsString, final String gtString,
       final InputChunk lsChunk, final InputChunk gtChunk
   ) {

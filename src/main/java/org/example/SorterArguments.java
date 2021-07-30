@@ -53,16 +53,16 @@ public class SorterArguments {
   @Option(names = {"--output-encoding"}, description = "encoding for output file")
   private String outputEncoding;
 
-  @Option(names = { "--reflection" }, description = "enable reflection (fast mode)")
+  @Option(names = {"--reflection"}, description = "enable reflection (fast mode)")
   private boolean enableReflection;
 
   @Option(
-      names = { "-m", "--memorySize" },
+      names = {"-m", "--memorySize"},
       description = "calculate 'chunks' and 'strings' using memorySize (memorySize in bytes)"
   )
   private Long memorySize;
 
-  @Option(names = { "-h", "--help" }, description = "display a help message", usageHelp = true)
+  @Option(names = {"-h", "--help"}, description = "display a help message", usageHelp = true)
   private boolean helpRequested;
 
   public Charset getCharset() {
