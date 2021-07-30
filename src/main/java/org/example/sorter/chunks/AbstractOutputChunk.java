@@ -29,6 +29,7 @@ public abstract class AbstractOutputChunk implements OutputChunk {
   }
 
   protected abstract void save(String[] data, int from, int to);
+  protected abstract void saveWithAdditionalData(String[] data, int from, int to);
 
   @Override
   public boolean add(String line) {
@@ -56,15 +57,13 @@ public abstract class AbstractOutputChunk implements OutputChunk {
               System.arraycopy(anotherChunk.data, anotherChunk.cursor, data, size, count);
               size += count;
             } else {
-              save();
-              save(anotherChunk.data, anotherChunk.cursor, position);
+              saveWithAdditionalData(anotherChunk.data, anotherChunk.cursor, position);
             }
           }
           anotherChunk.cursor = position + 1;
           return anotherChunk.data[position];
         }
-        save();
-        save(anotherChunk.data, anotherChunk.cursor, anotherChunk.size);
+        saveWithAdditionalData(anotherChunk.data, anotherChunk.cursor, anotherChunk.size);
         anotherChunk.cursor = anotherChunk.size;
       }
       anotherChunk.freeResources();

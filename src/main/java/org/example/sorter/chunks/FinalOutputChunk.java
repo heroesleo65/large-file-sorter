@@ -2,6 +2,7 @@ package org.example.sorter.chunks;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import lombok.extern.log4j.Log4j2;
 import org.example.context.ApplicationContext;
@@ -45,19 +46,36 @@ public class FinalOutputChunk extends AbstractOutputChunk {
 
   @Override
   protected void save(String[] data, int from, int to) {
-    if (to <= from) {
-      return;
-    }
-
     try (var stream = context.getStreamFactory().getOutputStream(outputFile)) {
-      for (int i = from; i < to; i++) {
-        var bytes = data[i].getBytes(charset);
-        stream.write(bytes);
-        stream.write(newLineBytes);
-      }
+      save(stream, data, from, to);
     } catch (IOException ex) {
-      log.error(() -> "Can't save data in file '" + outputFile + "'", ex);
-      context.sendSignal(ex);
+      failSaveToFile(ex);
     }
+  }
+
+  @Override
+  protected void saveWithAdditionalData(String[] data, int from, int to) {
+    try (var stream = context.getStreamFactory().getOutputStream(outputFile)) {
+      if (size != 0) {
+        save(stream, this.data, 0, size);
+        clear();
+      }
+      save(stream, data, from, to);
+    } catch (IOException ex) {
+      failSaveToFile(ex);
+    }
+  }
+
+  private void save(OutputStream stream, String[] data, int from, int to) throws IOException {
+    for (int i = from; i < to; i++) {
+      var bytes = data[i].getBytes(charset);
+      stream.write(bytes);
+      stream.write(newLineBytes);
+    }
+  }
+
+  private void failSaveToFile(IOException ex) {
+    log.error(() -> "Can't save data in file '" + outputFile + "'", ex);
+    context.sendSignal(ex);
   }
 }

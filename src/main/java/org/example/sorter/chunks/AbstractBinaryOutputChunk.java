@@ -47,35 +47,16 @@ public abstract class AbstractBinaryOutputChunk extends AbstractOutputChunk {
     }
   }
 
-  private void save(OutputStream stream, String[] data, int from, int to) throws IOException {
-    // MetaData:
-    // first byte - coder
-    // 2-6 bytes - decoded len of string as 128 Base varint
-    byte[] metaData = new byte[6];
-
-    char[] chars = null;
-    byte[] bytes = null;
-    for (int i = from; i < to; i++) {
-      var line = data[i];
-
-      metaData[0] = context.getStringContext().getCoder(line);
-
-      var value = context.getStringContext().getValueArray(line);
-      if (value == null) {
-        if (chars == null) {
-          chars = new char[bufferSize];
-        }
-        if (bytes == null) {
-          bytes = new byte[2 * bufferSize];
-        }
-        int len = StreamHelper.writeVarint32(metaData, 1, 2 * line.length());
-        stream.write(metaData, 0, len);
-        writeData(stream, line, chars, bytes);
-      } else {
-        int len = StreamHelper.writeVarint32(metaData, 1, value.length);
-        stream.write(metaData, 0, len);
-        stream.write(value);
+  @Override
+  protected void saveWithAdditionalData(String[] data, int from, int to) {
+    try (var stream = context.getOutputStream(id)) {
+      if (size != 0) {
+        save(stream, this.data, 0, size);
+        clear();
       }
+      save(stream, data, from, to);
+    } catch (IOException ex) {
+      failSaveToFile(ex);
     }
   }
 
@@ -110,6 +91,38 @@ public abstract class AbstractBinaryOutputChunk extends AbstractOutputChunk {
       }
     } else {
       super.copyAndSave(inputChunk);
+    }
+  }
+
+  private void save(OutputStream stream, String[] data, int from, int to) throws IOException {
+    // MetaData:
+    // first byte - coder
+    // 2-6 bytes - decoded len of string as 128 Base varint
+    byte[] metaData = new byte[6];
+
+    char[] chars = null;
+    byte[] bytes = null;
+    for (int i = from; i < to; i++) {
+      var line = data[i];
+
+      metaData[0] = context.getStringContext().getCoder(line);
+
+      var value = context.getStringContext().getValueArray(line);
+      if (value == null) {
+        if (chars == null) {
+          chars = new char[bufferSize];
+        }
+        if (bytes == null) {
+          bytes = new byte[2 * bufferSize];
+        }
+        int len = StreamHelper.writeVarint32(metaData, 1, 2 * line.length());
+        stream.write(metaData, 0, len);
+        writeData(stream, line, chars, bytes);
+      } else {
+        int len = StreamHelper.writeVarint32(metaData, 1, value.length);
+        stream.write(metaData, 0, len);
+        stream.write(value);
+      }
     }
   }
 
