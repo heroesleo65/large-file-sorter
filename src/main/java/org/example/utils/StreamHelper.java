@@ -1,8 +1,5 @@
 package org.example.utils;
 
-import java.io.IOException;
-import java.io.OutputStream;
-
 public final class StreamHelper {
 
   private StreamHelper() {
@@ -13,13 +10,13 @@ public final class StreamHelper {
    * Write integer to stream as "Base 128 Varints"
    * (https://developers.google.com/protocol-buffers/docs/encoding)
    */
-  public static void writeVarint32(OutputStream stream, int value) throws IOException {
+  public static int writeVarint32(byte[] buffer, int offset, int value) {
     do {
       if ((value & ~0x7F) == 0) {
-        stream.write((byte) value);
-        return;
+        buffer[offset++] = (byte) value;
+        return offset;
       }
-      stream.write((byte) ((value & 0x7F) | 0x80));
+      buffer[offset++] = (byte) ((value & 0x7F) | 0x80);
       value >>>= 7;
     } while (true);
   }

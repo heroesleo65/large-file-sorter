@@ -162,9 +162,11 @@ class OutputUnsortedChunkTest {
       Function<String, Integer> lengthFun
   ) throws IOException {
     var result = new ByteArrayOutputStream();
+    byte[] metaData = new byte[6];
     for (var line : lines) {
-      result.write(coder);
-      StreamHelper.writeVarint32(result, lengthFun.apply(line));
+      metaData[0] = (byte) coder;
+      int len = StreamHelper.writeVarint32(metaData, 1, lengthFun.apply(line));
+      result.write(metaData, 0, len);
       result.write(codes.get(line));
     }
     return result.toByteArray();

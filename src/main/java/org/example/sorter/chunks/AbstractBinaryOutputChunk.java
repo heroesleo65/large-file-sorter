@@ -48,12 +48,17 @@ public abstract class AbstractBinaryOutputChunk extends AbstractOutputChunk {
   }
 
   private void save(OutputStream stream, String[] data, int from, int to) throws IOException {
+    // MetaData:
+    // first byte - coder
+    // 2-6 bytes - decoded len of string as 128 Base varint
+    byte[] metaData = new byte[6];
+
     char[] chars = null;
     byte[] bytes = null;
     for (int i = from; i < to; i++) {
       var line = data[i];
 
-      stream.write(context.getStringContext().getCoder(line));
+      metaData[0] = context.getStringContext().getCoder(line);
 
       var value = context.getStringContext().getValueArray(line);
       if (value == null) {
@@ -63,9 +68,12 @@ public abstract class AbstractBinaryOutputChunk extends AbstractOutputChunk {
         if (bytes == null) {
           bytes = new byte[2 * bufferSize];
         }
+        int len = StreamHelper.writeVarint32(metaData, 1, 2 * line.length());
+        stream.write(metaData, 0, len);
         writeData(stream, line, chars, bytes);
       } else {
-        StreamHelper.writeVarint32(stream, value.length);
+        int len = StreamHelper.writeVarint32(metaData, 1, value.length);
+        stream.write(metaData, 0, len);
         stream.write(value);
       }
     }
@@ -105,11 +113,8 @@ public abstract class AbstractBinaryOutputChunk extends AbstractOutputChunk {
     }
   }
 
-  private void writeData(
-      OutputStream stream, String line, char[] chars, byte[] bytes
-  ) throws IOException {
-    StreamHelper.writeVarint32(stream, 2 * line.length());
-
+  private void writeData(OutputStream stream, String line, char[] chars, byte[] bytes)
+      throws IOException {
     int count;
     int offset = 0;
     while ((count = context.getStringContext().getValueArray(line, offset, chars, bytes)) > 0) {
