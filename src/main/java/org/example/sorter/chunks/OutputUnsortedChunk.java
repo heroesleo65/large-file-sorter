@@ -18,6 +18,6 @@ public class OutputUnsortedChunk extends AbstractBinaryOutputChunk implements So
 
   @Override
   public void sort() {
-    Arrays.sort(data, cursor, size);
+    Arrays.sort(data, 0, size);
   }
 }
