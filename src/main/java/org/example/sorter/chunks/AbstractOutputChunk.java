@@ -24,10 +24,7 @@ public abstract class AbstractOutputChunk implements OutputChunk {
   public void save() {
     if (size != 0) {
       save(data, 0, size);
-
-      // clear
-      size = 0;
-      Arrays.fill(data, null); // for GC
+      clear();
     }
   }
 
@@ -65,7 +62,6 @@ public abstract class AbstractOutputChunk implements OutputChunk {
         save(anotherChunk.data, anotherChunk.cursor, anotherChunk.size);
         anotherChunk.cursor = anotherChunk.size;
       }
-      Arrays.fill(anotherChunk.data, 0, anotherChunk.cursor, null); // for GC
       anotherChunk.freeResources();
       return null;
     }
@@ -98,5 +94,10 @@ public abstract class AbstractOutputChunk implements OutputChunk {
 
       save();
     }
+  }
+
+  protected void clear() {
+    size = 0;
+    Arrays.fill(data, null); // for GC
   }
 }

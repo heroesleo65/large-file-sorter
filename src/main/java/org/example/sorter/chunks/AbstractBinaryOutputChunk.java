@@ -82,32 +82,32 @@ public abstract class AbstractBinaryOutputChunk extends AbstractOutputChunk {
   @Override
   public void copyAndSave(InputChunk inputChunk) {
     if (inputChunk instanceof InputSortedChunk) {
-      save();
-
-      var anotherChunk = (InputSortedChunk) inputChunk;
-      if (anotherChunk.nextLoad()) {
-        // Copy directly binary data from anotherChunk to this chunk
-        try (var stream = context.getOutputStream(id)) {
-          final var monitoring = new CopyFileMonitoring();
-
-          save(stream, anotherChunk.data, anotherChunk.cursor, anotherChunk.size);
-          anotherChunk.cursor = anotherChunk.size;
-
-          anotherChunk.loadData(bufferSize, (bytes, len) -> {
-            try {
-              stream.write(bytes, 0, len);
-            } catch (IOException ex) {
-              monitoring.exception = ex;
-              return false;
-            }
-            return true;
-          });
-          monitoring.signal();
-        } catch (IOException ex) {
-          failSaveToFile(ex);
+      try (var stream = context.getOutputStream(id)) {
+        if (size != 0) {
+          save(stream, data, 0, size);
+          clear();
         }
+
+        final var monitoring = new CopyFileMonitoring();
+
+        // Copy directly binary data from anotherChunk to this chunk
+        var anotherChunk = (InputSortedChunk) inputChunk;
+        save(stream, anotherChunk.data, anotherChunk.cursor, anotherChunk.size);
+        anotherChunk.loadData(bufferSize, (bytes, len) -> {
+          try {
+            stream.write(bytes, 0, len);
+          } catch (IOException ex) {
+            monitoring.exception = ex;
+            return false;
+          }
+          return true;
+        });
+        anotherChunk.freeResources();
+
+        monitoring.signal();
+      } catch (IOException ex) {
+        failSaveToFile(ex);
       }
-      anotherChunk.freeResources();
     } else {
       super.copyAndSave(inputChunk);
     }

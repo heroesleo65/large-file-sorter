@@ -48,6 +48,7 @@ public class InputSortedChunk extends AbstractInputChunk {
         log.error("Can't delete file '{}'", inputFile);
       }
     }
+    super.freeResources();
   }
 
   @Override

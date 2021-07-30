@@ -41,6 +41,9 @@ public abstract class AbstractInputChunk implements InputChunk {
   }
 
   protected void freeResources() {
+    cursor = 0;
+    size = 0;
+    Arrays.fill(data, null); // for GC
   }
 
   private String take(int position) {
