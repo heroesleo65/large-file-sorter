@@ -17,7 +17,7 @@ import picocli.CommandLine.Option;
 public class SorterArguments {
 
   @Option(names = {"--threads"}, description = "count of threads (default: ${DEFAULT-VALUE})")
-  private int threadsCount = Runtime.getRuntime().availableProcessors();
+  private int threadsCount = 2 * Runtime.getRuntime().availableProcessors();
 
   @Option(
       names = {"--chunks"},
