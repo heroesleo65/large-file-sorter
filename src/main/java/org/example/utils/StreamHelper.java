@@ -14,14 +14,13 @@ public final class StreamHelper {
    * (https://developers.google.com/protocol-buffers/docs/encoding)
    */
   public static void writeVarint32(OutputStream stream, int value) throws IOException {
-    while (true) {
+    do {
       if ((value & ~0x7F) == 0) {
         stream.write((byte) value);
         return;
-      } else {
-        stream.write((byte) ((value & 0x7F) | 0x80));
-        value >>>= 7;
       }
-    }
+      stream.write((byte) ((value & 0x7F) | 0x80));
+      value >>>= 7;
+    } while (true);
   }
 }
