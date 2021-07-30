@@ -41,6 +41,10 @@ public abstract class AbstractBinaryOutputChunk extends AbstractOutputChunk {
 
   @Override
   protected void save(String[] data, int from, int to) {
+    if (to <= from) {
+      return;
+    }
+
     char[] chars = null;
     byte[] bytes = null;
     try (var stream = context.getOutputStream(id)) {

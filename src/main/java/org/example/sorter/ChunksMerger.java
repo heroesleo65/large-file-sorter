@@ -54,7 +54,7 @@ public class ChunksMerger {
           var data = item.data;
 
           outputChunk.add(data);
-          data = outputChunk.copyUtil(chunks[item.index], v -> v.compareTo(nextString) < 0);
+          data = outputChunk.copyWithSaveUtil(chunks[item.index], v -> v.compareTo(nextString) < 0);
           if (data != null) {
             item.data = data;
             priorityQueue.add(item);
@@ -125,7 +125,7 @@ public class ChunksMerger {
       final InputChunk lsChunk, final InputChunk gtChunk
   ) {
     outputChunk.add(lsString);
-    var nextString = outputChunk.copyUtil(lsChunk, v -> v.compareTo(gtString) < 0);
+    var nextString = outputChunk.copyWithSaveUtil(lsChunk, v -> v.compareTo(gtString) < 0);
     if (nextString == null) {
       outputChunk.add(gtString);
       outputChunk.copyAndSave(gtChunk);

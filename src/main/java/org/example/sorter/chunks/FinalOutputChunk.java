@@ -45,6 +45,10 @@ public class FinalOutputChunk extends AbstractOutputChunk {
 
   @Override
   protected void save(String[] data, int from, int to) {
+    if (to <= from) {
+      return;
+    }
+
     try (var stream = context.getStreamFactory().getOutputStream(outputFile)) {
       for (int i = from; i < to; i++) {
         var bytes = data[i].getBytes(charset);

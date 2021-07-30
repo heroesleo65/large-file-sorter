@@ -8,6 +8,6 @@ public interface OutputChunk extends Chunk {
   void save();
   boolean add(String line);
 
-  String copyUtil(InputChunk inputChunk, Predicate<String> predicate);
+  String copyWithSaveUtil(InputChunk inputChunk, Predicate<String> predicate);
   void copyAndSave(InputChunk inputChunk);
 }
