@@ -58,6 +58,9 @@ public class SorterArguments {
   @Option(names = {"-I", "--ignore-case"}, description = "ignore case in compare of two strings")
   private boolean ignoreCase;
 
+  @Option(names = {"--verbose"}, description = "show details information about process")
+  private boolean verbose;
+
   @Option(
       names = {"-m", "--memory-size"},
       description = "calculate 'chunks' and 'strings' using memorySize (memorySize in bytes)"

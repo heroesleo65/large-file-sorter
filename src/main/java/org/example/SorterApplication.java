@@ -45,6 +45,7 @@ public class SorterApplication {
     var chunkSize = sorterCommand.getStringsCount();
     var bufferSize = sorterCommand.getBufferSize();
     var memorySize = sorterCommand.getMemorySize();
+    var verbose = sorterCommand.isVerbose();
     Comparator<String> comparator = sorterCommand.isIgnoreCase()
         ? String.CASE_INSENSITIVE_ORDER
         : Comparator.naturalOrder();
@@ -56,7 +57,7 @@ public class SorterApplication {
       var parameters = new ChunkParameters(
           availableChunks, chunkSize, bufferSize, threadsCount, memorySize
       );
-      fileSorter.sort(parameters, comparator, output, outputCharset);
+      fileSorter.sort(parameters, comparator, output, outputCharset, verbose);
     } catch (InterruptedException ex) {
       TerminalHelper.forceCloseTerminal();
     } catch (Exception ex) {

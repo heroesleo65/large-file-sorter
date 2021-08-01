@@ -141,7 +141,7 @@ class FileSorterTest {
       var parameters = new ChunkParameters(
           availableChunks, chunkSize, bufferSize, threadsCount, memorySize
       );
-      sorter.sort(parameters, comparator, output, UTF_8);
+      sorter.sort(parameters, comparator, output, UTF_8, true);
     }
 
     if (reflectionFlag != stringContext.hasSupportReflection()) {

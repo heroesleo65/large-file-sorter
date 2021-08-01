@@ -2,6 +2,7 @@ package org.example.sorter;
 
 import static org.example.sorter.SortState.MERGE;
 import static org.example.sorter.SortState.PARTITION_SORT;
+import static org.example.sorter.SortState.SAVE_OUTPUT;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -58,7 +59,11 @@ public class FileSorter implements Closeable {
   }
 
   public void sort(
-      ChunkParameters chunkParameters, Comparator<String> comparator, Path output, Charset charset
+      ChunkParameters chunkParameters,
+      Comparator<String> comparator,
+      Path output,
+      Charset charset,
+      boolean verbose
   ) throws InterruptedException {
     try {
       context.getFileSystemContext().createTemporaryDirectory();
@@ -85,7 +90,8 @@ public class FileSorter implements Closeable {
           workCounter,
           chunkParameters,
           chunkFactory,
-          progressBar
+          progressBar,
+          verbose
       );
       if (chunksCount <= 0) {
         return;
@@ -102,7 +108,8 @@ public class FileSorter implements Closeable {
           chunkParameters,
           chunksCount,
           chunkFactory,
-          progressBar
+          progressBar,
+          verbose
       );
     }
   }
@@ -119,12 +126,15 @@ public class FileSorter implements Closeable {
       AtomicInteger workCounter,
       ChunkParameters chunkParameters,
       ChunkFactory chunkFactory,
-      ProgressBar progressBar
+      ProgressBar progressBar,
+      boolean verbose
   ) {
     int allowableChunks = chunkParameters.getAllowableChunks(PARTITION_SORT);
     if (workCounter.incrementAndGet() > allowableChunks) {
       throw new IllegalArgumentException("allowableChunks is too small");
     }
+
+    setState(PARTITION_SORT, progressBar, verbose);
 
     var sortableOutputChunk = chunkFactory.createSortableOutputChunk(allowableChunks);
     int chunkNumber = 1;
@@ -174,13 +184,17 @@ public class FileSorter implements Closeable {
       ChunkParameters chunkParameters,
       int remainingChunks,
       ChunkFactory chunkFactory,
-      ProgressBar progressBar
+      ProgressBar progressBar,
+      boolean verbose
   ) throws InterruptedException {
     if (remainingChunks <= 0) {
+      setState(SAVE_OUTPUT, progressBar, verbose);
       return;
     }
 
     progressBar.maxHint(2L * remainingChunks);
+    setState(MERGE, progressBar, verbose);
+
     int allowableChunks = chunkParameters.getAllowableChunks(MERGE);
 
     do {
@@ -215,6 +229,8 @@ public class FileSorter implements Closeable {
         );
         mergeAction.accept(action);
       } else {
+        setState(SAVE_OUTPUT, progressBar, verbose);
+
         var action = new FinalMergeChunksAction(
             chunks,
             chunkFactory,
@@ -240,6 +256,12 @@ public class FileSorter implements Closeable {
     }
 
     return chunks;
+  }
+
+  private void setState(SortState state, ProgressBar progressBar, boolean verbose) {
+    if (verbose) {
+      progressBar.setExtraMessage(state.getDescription());
+    }
   }
 
   private static abstract class MergeChunksAction {
