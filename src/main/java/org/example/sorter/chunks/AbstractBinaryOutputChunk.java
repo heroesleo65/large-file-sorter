@@ -110,10 +110,10 @@ public abstract class AbstractBinaryOutputChunk extends AbstractOutputChunk {
       var value = context.getStringContext().getValueArray(line);
       if (value == null) {
         if (chars == null) {
-          chars = new char[bufferSize];
+          chars = new char[bufferSize >> 2];
         }
         if (bytes == null) {
-          bytes = new byte[2 * bufferSize];
+          bytes = new byte[bufferSize >> 1];
         }
         int len = StreamHelper.writeVarint32(metaData, 1, 2 * line.length());
         stream.write(metaData, 0, len);

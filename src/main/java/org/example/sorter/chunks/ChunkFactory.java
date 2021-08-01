@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.context.ApplicationContext;
 import org.example.sorter.InputChunk;
 import org.example.sorter.OutputChunk;
+import org.example.sorter.SortState;
 import org.example.sorter.SortableOutputChunk;
 import org.example.sorter.parameters.ChunkParameters;
 
@@ -20,33 +21,32 @@ public class ChunkFactory {
   private final Comparator<String> comparator;
   private final ApplicationContext context;
 
-  public InputChunk createInputSortedChunk(int chunkId) {
-    return new InputSortedChunk(chunkId, chunkParameters.getChunkSize(), context);
+  public InputChunk createInputSortedChunk(SortState state, int chunks, int chunkId) {
+    return new InputSortedChunk(chunkId, chunkParameters.getChunkSize(state, chunks), context);
   }
 
-  public SortableOutputChunk createSortableOutputChunk() {
+  public SortableOutputChunk createSortableOutputChunk(int chunks) {
     return new OutputUnsortedChunk(
         context.getFileSystemContext().nextTemporaryFile(),
-        chunkParameters.getChunkSize(),
+        chunkParameters.getChunkSize(SortState.PARTITION_SORT, chunks),
         chunkParameters.getBufferSize(),
         comparator,
         context
     );
   }
 
-  public OutputChunk createTemporaryOutputSortedChunk() {
+  public OutputChunk createTemporaryOutputSortedChunk(int chunks) {
     return new OutputSortedChunk(
         context.getFileSystemContext().nextTemporaryFile(),
-        chunkParameters.getChunkSize(),
+        chunkParameters.getChunkSize(SortState.MERGE, chunks),
         chunkParameters.getBufferSize(),
         context
     );
   }
 
-  public OutputChunk createFinalOutputSortedChunk() {
-    return new FinalOutputChunk(outputFile, charset, chunkParameters.getChunkSize(), context);
-  }
-
-  public void onFinishOutputChunkEvent(OutputChunk chunk) {
+  public OutputChunk createFinalOutputSortedChunk(int chunks) {
+    return new FinalOutputChunk(
+        outputFile, charset, chunkParameters.getChunkSize(SortState.SAVE_OUTPUT, chunks), context
+    );
   }
 }

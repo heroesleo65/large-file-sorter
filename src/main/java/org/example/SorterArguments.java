@@ -59,7 +59,7 @@ public class SorterArguments {
   private boolean ignoreCase;
 
   @Option(
-      names = {"-m", "--memorySize"},
+      names = {"-m", "--memory-size"},
       description = "calculate 'chunks' and 'strings' using memorySize (memorySize in bytes)"
   )
   private Long memorySize;

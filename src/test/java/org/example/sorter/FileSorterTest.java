@@ -29,7 +29,6 @@ import org.example.io.MockOutputStream;
 import org.example.io.MockRandomAccessInputStream;
 import org.example.io.StreamFactory;
 import org.example.sorter.parameters.ChunkParameters;
-import org.example.sorter.parameters.formula.QuadraticParameterFormula;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.invocation.InvocationOnMock;
@@ -42,32 +41,47 @@ class FileSorterTest {
 
   @ParameterizedTest
   @CsvSource({
-      "small-input.txt, 1, 4, 4, 128, true",
-      "small-input.txt, 2, 4, 4, 128, true",
-      "small-input.txt, 1, 32, 32, 128, true",
-      "small-input.txt, 2, 32, 32, 128, true",
+      // Work without memory size
+      "small-input.txt, 1, 4, 4, 512, , true",
+      "small-input.txt, 2, 4, 4, 512, , true",
+      "small-input.txt, 1, 32, 32, 512, , true",
+      "small-input.txt, 2, 32, 32, 512, , true",
 
-      "small-input.txt, 1, 4, 4, 128, false",
-      "small-input.txt, 2, 4, 4, 128, false",
-      "small-input.txt, 1, 32, 32, 128, false",
-      "small-input.txt, 2, 32, 32, 128, false",
+      "small-input.txt, 1, 4, 4, 512, , false",
+      "small-input.txt, 2, 4, 4, 512, , false",
+      "small-input.txt, 1, 32, 32, 512, , false",
+      "small-input.txt, 2, 32, 32, 512, , false",
 
-      "middle-input.txt, 1, 4, 4, 128, true",
-      "middle-input.txt, 2, 4, 4, 128, true",
-      "middle-input.txt, 1, 32, 32, 128, true",
-      "middle-input.txt, 2, 32, 32, 128, true",
+      "middle-input.txt, 1, 4, 4, 512, , true",
+      "middle-input.txt, 2, 4, 4, 512, , true",
+      "middle-input.txt, 1, 32, 32, 512, , true",
+      "middle-input.txt, 2, 32, 32, 512, , true",
 
-      "middle-input.txt, 1, 4, 4, 128, false",
-      "middle-input.txt, 2, 4, 4, 128, false",
-      "middle-input.txt, 1, 32, 32, 128, false",
-      "middle-input.txt, 2, 32, 32, 128, false",
+      "middle-input.txt, 1, 4, 4, 512, , false",
+      "middle-input.txt, 2, 4, 4, 512, , false",
+      "middle-input.txt, 1, 32, 32, 512, , false",
+      "middle-input.txt, 2, 32, 32, 512, , false",
+
+      // Work with memory size
+      "small-input.txt, 1, , , 512, 78643200, true",
+      "small-input.txt, 2, , , 512, 78643200, true",
+
+      "small-input.txt, 1, , , 512, 78643200, false",
+      "small-input.txt, 2, , , 512, 78643200, false",
+
+      "middle-input.txt, 1, , , 512, 78643200, true",
+      "middle-input.txt, 2, , , 512, 78643200, true",
+
+      "middle-input.txt, 1, , , 512, 78643200, false",
+      "middle-input.txt, 2, , , 512, 78643200, false",
   })
   void integrationSortInMemory(
       String resourceName,
       int threadsCount,
-      int availableChunks,
-      int chunkSize,
+      Integer availableChunks,
+      Integer chunkSize,
       int bufferSize,
+      Long memorySize,
       boolean reflectionFlag
   ) throws Exception {
     String text = loadResource(resourceName);
@@ -124,9 +138,8 @@ class FileSorterTest {
     });
 
     try (var sorter = new FileSorter(input, UTF_8, threadsCount, context)) {
-      var formula = new QuadraticParameterFormula();
       var parameters = new ChunkParameters(
-          availableChunks, chunkSize, bufferSize, null, formula
+          availableChunks, chunkSize, bufferSize, threadsCount, memorySize
       );
       sorter.sort(parameters, comparator, output, UTF_8);
     }

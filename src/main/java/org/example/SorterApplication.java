@@ -1,6 +1,7 @@
 package org.example;
 
 import static org.example.sorter.parameters.DefaultParameters.MIN_AVAILABLE_CHUNKS;
+import static org.example.sorter.parameters.DefaultParameters.MIN_BUFFER_SIZE;
 import static org.example.sorter.parameters.DefaultParameters.MIN_CHUNK_SIZE;
 import static org.example.sorter.parameters.DefaultParameters.MIN_MEMORY_SIZE;
 
@@ -13,7 +14,6 @@ import lombok.extern.log4j.Log4j2;
 import org.example.context.DefaultApplicationContext;
 import org.example.sorter.FileSorter;
 import org.example.sorter.parameters.ChunkParameters;
-import org.example.sorter.parameters.formula.QuadraticParameterFormula;
 import org.example.utils.TerminalHelper;
 import picocli.CommandLine;
 
@@ -53,9 +53,8 @@ public class SorterApplication {
         /* prefixTemporaryDirectory = */ null, sorterCommand.isEnableReflection()
     );
     try (var fileSorter = new FileSorter(input, inputCharset, threadsCount, context)) {
-      var formula = new QuadraticParameterFormula();
       var parameters = new ChunkParameters(
-          availableChunks, chunkSize, bufferSize, memorySize, formula
+          availableChunks, chunkSize, bufferSize, threadsCount, memorySize
       );
       fileSorter.sort(parameters, comparator, output, outputCharset);
     } catch (InterruptedException ex) {
@@ -68,7 +67,7 @@ public class SorterApplication {
   private static boolean check(SorterArguments arguments) {
     List<String> invalidValues = check(
         () -> arguments.getThreadsCount() > 0 ? null : "--threads",
-        () -> arguments.getBufferSize() > 0 ? null : "--buffer-size",
+        () -> arguments.getBufferSize() > MIN_BUFFER_SIZE ? null : "--buffer-size",
         () -> isEmptyOr(arguments.getChunksCount(), value -> value >= MIN_AVAILABLE_CHUNKS)
             ? null
             : "--chunks",
