@@ -196,7 +196,7 @@ public class ChunkParameters {
           return threadsCount <= 2 * chunks ? threadsCount : (threadsCount >> 1) + 1;
         }
         if (chunks < 1) {
-          throw new IllegalStateException();
+          throw new IllegalArgumentException();
         }
         return (int) chunks;
       }
@@ -207,7 +207,13 @@ public class ChunkParameters {
 
       long chunks = memorySize / (Math.max(stringSize, COEFFICIENT_BUF_STRING) + bufferSize);
       if (chunks < MIN_AVAILABLE_CHUNKS) {
-        throw new IllegalStateException();
+        chunks = memorySize / (DEFAULT_CHUNK_SIZE * stringSize + bufferSize);
+        if (chunks < MIN_AVAILABLE_CHUNKS) {
+          chunks = memorySize / (stringSize + bufferSize);
+          if (chunks < MIN_AVAILABLE_CHUNKS) {
+            throw new IllegalArgumentException();
+          }
+        }
       }
 
       return (int) chunks;
