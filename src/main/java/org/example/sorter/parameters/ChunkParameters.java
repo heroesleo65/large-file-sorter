@@ -81,6 +81,10 @@ public class ChunkParameters {
       return remainingChunks + 1;
     }
 
+    if (chunks < MIN_AVAILABLE_CHUNKS) {
+      throw new IllegalArgumentException();
+    }
+
     int result = Math.max(chunks / threadsCount, MIN_AVAILABLE_CHUNKS) + (threadsCount >> 1);
     return Math.min(result, chunks);
   }
@@ -199,7 +203,7 @@ public class ChunkParameters {
           throw new IllegalArgumentException();
         }
         return (int) chunks;
-      }
+      } // end PARTITION_SORT
 
       if (stringSize == 0) {
         return MIN_AVAILABLE_CHUNKS;
@@ -210,9 +214,6 @@ public class ChunkParameters {
         chunks = memorySize / (DEFAULT_CHUNK_SIZE * stringSize + bufferSize);
         if (chunks < MIN_AVAILABLE_CHUNKS) {
           chunks = memorySize / (stringSize + bufferSize);
-          if (chunks < MIN_AVAILABLE_CHUNKS) {
-            throw new IllegalArgumentException();
-          }
         }
       }
 
