@@ -39,8 +39,8 @@ public class DefaultFileSystemContext implements FileSystemContext {
   }
 
   @Override
-  public File getTemporaryFile(int id) {
-    return new File(tempDirectory, Integer.toString(id));
+  public File getTemporaryFile(long id) {
+    return new File(tempDirectory, Long.toString(id));
   }
 
   @Override

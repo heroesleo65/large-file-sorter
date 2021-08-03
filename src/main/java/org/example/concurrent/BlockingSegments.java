@@ -3,7 +3,7 @@ package org.example.concurrent;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 // TODO: add description and comments
 public class BlockingSegments implements BlockingBag {
@@ -14,12 +14,12 @@ public class BlockingSegments implements BlockingBag {
   private final ReentrantLock lock = new ReentrantLock();
   private final Condition notEmpty = lock.newCondition();
 
-  private volatile int[] elementData;
+  private volatile long[] elementData;
   private volatile int size;
   private final AtomicInteger count = new AtomicInteger();
 
   public BlockingSegments() {
-    this.elementData = new int[DEFAULT_CAPACITY];
+    this.elementData = new long[DEFAULT_CAPACITY];
     this.size = 0;
   }
 
@@ -32,7 +32,7 @@ public class BlockingSegments implements BlockingBag {
   }
 
   @Override
-  public void add(int element) {
+  public void add(long element) {
     if (element < 0) {
       throw new IllegalArgumentException("element must be greater than or equal to zero");
     }
@@ -41,7 +41,7 @@ public class BlockingSegments implements BlockingBag {
     lock.lock();
     try {
       var elementData = this.elementData;
-      int index = binarySearch(elementData, 0, size, element);
+      int index = binarySearch(elementData, size, element);
       if (index >= 0) {
         // case: value exists in segments
         // example:
@@ -109,12 +109,12 @@ public class BlockingSegments implements BlockingBag {
   }
 
   @Override
-  public IntStream takes(int countElements) throws InterruptedException {
+  public LongStream takes(int countElements) throws InterruptedException {
     if (countElements <= 0) {
-      return IntStream.empty();
+      return LongStream.empty();
     }
 
-    IntStream result = IntStream.empty();
+    var result = LongStream.empty();
 
     final var lock = this.lock;
     lock.lockInterruptibly();
@@ -133,24 +133,24 @@ public class BlockingSegments implements BlockingBag {
         }
         resultCount += c;
 
-        final int[] elementData = this.elementData;
+        final var elementData = this.elementData;
         for (int i = 0; c > 0; i++) {
-          int elementsInSegment = elementData[2 * i + 1] - elementData[2 * i] + 1;
+          long elementsInSegment = elementData[2 * i + 1] - elementData[2 * i] + 1;
           if (elementsInSegment < c) {
-            result = IntStream.concat(
-                result, IntStream.rangeClosed(elementData[2 * i], elementData[2 * i + 1])
+            result = LongStream.concat(
+                result, LongStream.rangeClosed(elementData[2 * i], elementData[2 * i + 1])
             );
             c -= elementsInSegment;
           } else if (elementsInSegment == c) {
-            result = IntStream.concat(
-                result, IntStream.rangeClosed(elementData[2 * i], elementData[2 * i + 1])
+            result = LongStream.concat(
+                result, LongStream.rangeClosed(elementData[2 * i], elementData[2 * i + 1])
             );
 
             leftShift(/* position = */ i + 1, /* count = */ i + 1);
             break;
           } else {
-            result = IntStream.concat(
-                result, IntStream.range(elementData[2 * i], elementData[2 * i] + c)
+            result = LongStream.concat(
+                result, LongStream.range(elementData[2 * i], elementData[2 * i] + c)
             );
 
             elementData[2 * i] += c;
@@ -185,8 +185,8 @@ public class BlockingSegments implements BlockingBag {
     size -= count;
   }
 
-  private void insert(int element, int position) {
-    int[] elementData = this.elementData;
+  private void insert(long element, int position) {
+    var elementData = this.elementData;
     if (2 * size == elementData.length) {
       elementData = grow(elementData.length + 2, position);
     } else {
@@ -203,9 +203,9 @@ public class BlockingSegments implements BlockingBag {
     size++;
   }
 
-  private int[] grow(int minCapacity, int insertPosition) {
+  private long[] grow(int minCapacity, int insertPosition) {
     int newLength = newCapacity(minCapacity);
-    int[] copy = new int[newLength];
+    var copy = new long[newLength];
 
     int binValueInsertPosition = insertPosition << 1;
 
@@ -249,14 +249,14 @@ public class BlockingSegments implements BlockingBag {
     throw new OutOfMemoryError();
   }
 
-  private static int binarySearch(int[] a, int fromIndex, int toIndex, int key) {
-    int low = fromIndex;
+  private static int binarySearch(long[] a, int toIndex, long key) {
+    int low = 0;
     int high = toIndex - 1;
 
     while (low <= high) {
       int mid = (low + high) >>> 1;
-      int midLeftBoundVal = a[2 * mid];
-      int midRightBoundVal = a[2 * mid + 1];
+      long midLeftBoundVal = a[2 * mid];
+      long midRightBoundVal = a[2 * mid + 1];
 
       if (midRightBoundVal < key)
         low = mid + 1;

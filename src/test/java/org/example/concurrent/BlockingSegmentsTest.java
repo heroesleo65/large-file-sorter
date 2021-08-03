@@ -79,7 +79,7 @@ class BlockingSegmentsTest {
     segments.add(7);
 
     var result = segments.takes(1);
-    assertThat(result).containsExactly(5);
+    assertThat(result).containsExactly(5L);
 
     assertThat(segments.countSegments()).isEqualTo(2);
     assertThat(segments.countElements()).isEqualTo(4);
@@ -95,7 +95,7 @@ class BlockingSegmentsTest {
     segments.add(7);
 
     var result = segments.takes(2);
-    assertThat(result).containsExactly(5, 6);
+    assertThat(result).containsExactly(5L, 6L);
 
     assertThat(segments.countSegments()).isEqualTo(2);
     assertThat(segments.countElements()).isEqualTo(3);
@@ -111,7 +111,7 @@ class BlockingSegmentsTest {
     segments.add(7);
 
     var result = segments.takes(3);
-    assertThat(result).containsExactly(5, 6, 7);
+    assertThat(result).containsExactly(5L, 6L, 7L);
 
     assertThat(segments.countSegments()).isEqualTo(1);
     assertThat(segments.countElements()).isEqualTo(2);
@@ -127,7 +127,7 @@ class BlockingSegmentsTest {
     segments.add(7);
 
     var result = segments.takes(5);
-    assertThat(result).containsExactly(5, 6, 7, 9, 10);
+    assertThat(result).containsExactly(5L, 6L, 7L, 9L, 10L);
 
     assertThat(segments.countSegments()).isEqualTo(0);
     assertThat(segments.countElements()).isEqualTo(0);
@@ -151,7 +151,7 @@ class BlockingSegmentsTest {
     thread.start();
 
     var result = segments.takes(5);
-    assertThat(result).containsExactly(0, 1, 2, 3, 4);
+    assertThat(result).containsExactly(0L, 1L, 2L, 3L, 4L);
 
     assertThat(segments.countSegments()).isEqualTo(0);
     assertThat(segments.countElements()).isEqualTo(0);

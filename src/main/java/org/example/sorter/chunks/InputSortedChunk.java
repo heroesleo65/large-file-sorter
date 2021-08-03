@@ -13,13 +13,13 @@ public class InputSortedChunk extends AbstractInputChunk {
   private static final int DELETE_ON_EXIT_ATTRIBUTE = 0x01;
   private static final int LOADED_FILE_ATTRIBUTE = 0x02;
 
-  private final int id;
+  private final long id;
   private final File inputFile;
   private long position;
   private byte attributes = DELETE_ON_EXIT_ATTRIBUTE;
   private final ApplicationContext context;
 
-  public InputSortedChunk(int id, int chunkSize, ApplicationContext context) {
+  public InputSortedChunk(long id, int chunkSize, ApplicationContext context) {
     super(chunkSize);
     this.id = id;
     this.inputFile = context.getFileSystemContext().getTemporaryFile(id);
@@ -27,7 +27,7 @@ public class InputSortedChunk extends AbstractInputChunk {
   }
 
   @Override
-  public int getId() {
+  public long getId() {
     return id;
   }
 

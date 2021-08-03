@@ -29,7 +29,7 @@ public abstract class AbstractBinaryOutputChunk extends AbstractOutputChunk {
   }
 
   @Override
-  public int getId() {
+  public long getId() {
     return id;
   }
 

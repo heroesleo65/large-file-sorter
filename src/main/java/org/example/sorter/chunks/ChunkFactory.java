@@ -21,7 +21,7 @@ public class ChunkFactory {
   private final Comparator<String> comparator;
   private final ApplicationContext context;
 
-  public InputChunk createInputSortedChunk(SortState state, int chunks, int chunkId) {
+  public InputChunk createInputSortedChunk(SortState state, int chunks, long chunkId) {
     return new InputSortedChunk(chunkId, chunkParameters.getChunkSize(state, chunks), context);
   }
 

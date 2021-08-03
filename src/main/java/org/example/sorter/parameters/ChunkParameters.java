@@ -71,14 +71,14 @@ public class ChunkParameters {
     return calculator.getAllowableChunks(state, avgStringSize);
   }
 
-  public int getAvailableChunks(SortState state, int remainingChunks) {
+  public int getAvailableChunks(SortState state, long remainingChunks) {
     if (state == SortState.PARTITION_SORT) {
       return 1;
     }
 
     int chunks = calculator.getAllowableChunks(state, avgStringSize);
     if (remainingChunks < chunks) {
-      return remainingChunks + 1;
+      return (int) (remainingChunks + 1);
     }
 
     if (chunks < MIN_AVAILABLE_CHUNKS) {
@@ -132,7 +132,7 @@ public class ChunkParameters {
       }
 
       long chunks = memorySize / (stringSize * chunkSize + bufferSize);
-      if (chunks < MIN_AVAILABLE_CHUNKS) {
+      if (chunks == 0) {
         throw new IllegalArgumentException();
       }
 

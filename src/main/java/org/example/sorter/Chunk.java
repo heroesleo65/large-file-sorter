@@ -1,7 +1,7 @@
 package org.example.sorter;
 
 public interface Chunk {
-  int getId();
+  long getId();
 
   boolean isEmpty();
 }

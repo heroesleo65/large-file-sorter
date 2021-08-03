@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -115,8 +116,8 @@ class FileSorterTest {
     when(fileSystemContext.exists(any())).thenAnswer(existsFileAnswer);
     when(fileSystemContext.delete(any())).thenReturn(true);
     when(fileSystemContext.nextTemporaryFile()).thenAnswer(invocation -> counter.getAndIncrement());
-    when(fileSystemContext.getTemporaryFile(anyInt())).thenAnswer(invocation -> {
-      int id = invocation.getArgument(0, Integer.class);
+    when(fileSystemContext.getTemporaryFile(anyLong())).thenAnswer(invocation -> {
+      long id = invocation.getArgument(0, Long.class);
       return new File(String.valueOf(id));
     });
 

@@ -26,7 +26,7 @@ public class FinalOutputChunk extends AbstractOutputChunk {
   }
 
   @Override
-  public int getId() {
+  public long getId() {
     throw new UnsupportedOperationException("FinalOutputChunk doesn't has id");
   }
 

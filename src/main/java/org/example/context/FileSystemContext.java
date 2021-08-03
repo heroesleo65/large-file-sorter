@@ -7,7 +7,7 @@ public interface FileSystemContext {
   void createTemporaryDirectory() throws IOException;
 
   int nextTemporaryFile();
-  File getTemporaryFile(int id);
+  File getTemporaryFile(long id);
 
   boolean exists(File file);
   boolean canRead(File file);

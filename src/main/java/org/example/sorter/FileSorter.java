@@ -85,7 +85,7 @@ public class FileSorter implements Closeable {
           outputFile, charset, chunkParameters, comparator, context
       );
 
-      int chunksCount = sortChunks(
+      long chunksCount = sortChunks(
           chunksForProcessing,
           workCounter,
           chunkParameters,
@@ -121,7 +121,7 @@ public class FileSorter implements Closeable {
     }
   }
 
-  private int sortChunks(
+  private long sortChunks(
       BlockingBag chunksForProcessing,
       AtomicInteger workCounter,
       ChunkParameters chunkParameters,
@@ -129,7 +129,7 @@ public class FileSorter implements Closeable {
       ProgressBar progressBar,
       boolean verbose
   ) {
-    int allowableChunks = chunkParameters.getAllowableChunks(PARTITION_SORT);
+    var allowableChunks = chunkParameters.getAllowableChunks(PARTITION_SORT);
     if (workCounter.incrementAndGet() > allowableChunks) {
       throw new IllegalArgumentException("allowableChunks is too small");
     }
@@ -137,7 +137,7 @@ public class FileSorter implements Closeable {
     setState(PARTITION_SORT, progressBar, verbose);
 
     var sortableOutputChunk = chunkFactory.createSortableOutputChunk(allowableChunks);
-    int chunkNumber = 1;
+    long chunkNumber = 1L;
 
     var sortAndSaveAction = new SortAndSaveAction(workCounter, chunksForProcessing, progressBar);
 
@@ -182,7 +182,7 @@ public class FileSorter implements Closeable {
       BlockingBag chunksForProcessing,
       AtomicInteger workCounter,
       ChunkParameters chunkParameters,
-      int remainingChunks,
+      long remainingChunks,
       ChunkFactory chunkFactory,
       ProgressBar progressBar,
       boolean verbose
@@ -203,7 +203,7 @@ public class FileSorter implements Closeable {
       Runnable counterDecrementAction = () -> workCounter.addAndGet(-availableChunks);
       Consumer<Runnable> mergeAction;
 
-      int currentWorkingChunks = workCounter.addAndGet(availableChunks);
+      var currentWorkingChunks = workCounter.addAndGet(availableChunks);
       if (currentWorkingChunks < allowableChunks) {
         curAvailableChunks = availableChunks;
         mergeAction = executor::submit;
@@ -252,7 +252,7 @@ public class FileSorter implements Closeable {
 
     var chunks = new InputChunk[count];
     for (int i = 0; it.hasNext(); i++) {
-      chunks[i] = chunkFactory.createInputSortedChunk(MERGE, count + 1, it.nextInt());
+      chunks[i] = chunkFactory.createInputSortedChunk(MERGE, count + 1, it.nextLong());
     }
 
     return chunks;
