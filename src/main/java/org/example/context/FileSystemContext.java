@@ -6,7 +6,7 @@ import java.io.IOException;
 public interface FileSystemContext {
   void createTemporaryDirectory() throws IOException;
 
-  int nextTemporaryFile();
+  long nextTemporaryFile();
   File getTemporaryFile(long id);
 
   boolean exists(File file);

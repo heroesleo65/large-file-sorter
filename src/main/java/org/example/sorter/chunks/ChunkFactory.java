@@ -6,47 +6,93 @@ import java.util.Comparator;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.example.context.ApplicationContext;
+import org.example.io.BinaryDeserializer;
+import org.example.io.BinarySerializer;
+import org.example.io.StringDeserializer;
+import org.example.io.StringSerializer;
+import org.example.io.TextSerializer;
+import org.example.sorter.CopyableOutputChunk;
 import org.example.sorter.InputChunk;
 import org.example.sorter.OutputChunk;
 import org.example.sorter.SortState;
-import org.example.sorter.SortableOutputChunk;
+import org.example.sorter.chunks.ids.FileOutputChunkId;
+import org.example.sorter.chunks.ids.OutputChunkId;
+import org.example.sorter.chunks.ids.TemporaryDataOutputChunkId;
 import org.example.sorter.parameters.ChunkParameters;
 
 @RequiredArgsConstructor
 public class ChunkFactory {
-  private final File outputFile;
-  private final Charset charset;
   private final ChunkParameters chunkParameters;
   @Getter
   private final Comparator<String> comparator;
   private final ApplicationContext context;
 
-  public InputChunk createInputSortedChunk(SortState state, int chunks, long chunkId) {
-    return new InputSortedChunk(chunkId, chunkParameters.getChunkSize(state, chunks), context);
+  @Getter
+  private final OutputChunkId finalOutputChunkId;
+
+  private final StringSerializer binarySerializer;
+
+  @Getter
+  private final StringSerializer textSerializer;
+
+  private final StringDeserializer binaryDeserializer;
+
+  public ChunkFactory(
+      File outputFile,
+      Charset charset,
+      ChunkParameters chunkParameters,
+      Comparator<String> comparator,
+      ApplicationContext context
+  ) {
+    this.chunkParameters = chunkParameters;
+    this.comparator = comparator;
+    this.context = context;
+
+    this.finalOutputChunkId = new FileOutputChunkId(outputFile, context);
+
+    this.binarySerializer = new BinarySerializer(chunkParameters.getBufferSize(), context);
+    this.textSerializer = new TextSerializer(charset);
+
+    this.binaryDeserializer = new BinaryDeserializer(context);
   }
 
-  public SortableOutputChunk createSortableOutputChunk(int chunks) {
-    return new OutputUnsortedChunk(
-        context.getFileSystemContext().nextTemporaryFile(),
+  public InputChunk createInputSortedChunk(SortState state, int chunks, long chunkId) {
+    return new InputSortedChunk(
+        chunkId,
+        chunkParameters.getChunkSize(state, chunks),
+        binaryDeserializer,
+        context
+    );
+  }
+
+  public OutputChunk createSortableOutputChunk(int chunks) {
+    var chunkId = context.getFileSystemContext().nextTemporaryFile();
+    return new SortableOutputChunk(
+        new TemporaryDataOutputChunkId(chunkId, context),
         chunkParameters.getChunkSize(SortState.PARTITION_SORT, chunks),
-        chunkParameters.getBufferSize(),
+        binarySerializer,
         comparator,
         context
     );
   }
 
-  public OutputChunk createTemporaryOutputSortedChunk(int chunks) {
+  public CopyableOutputChunk createTemporaryOutputSortedChunk(int chunks) {
+    var chunkId = context.getFileSystemContext().nextTemporaryFile();
     return new OutputSortedChunk(
-        context.getFileSystemContext().nextTemporaryFile(),
+        new TemporaryDataOutputChunkId(chunkId, context),
         chunkParameters.getChunkSize(SortState.MERGE, chunks),
         chunkParameters.getBufferSize(),
+        binarySerializer,
         context
     );
   }
 
-  public OutputChunk createFinalOutputSortedChunk(int chunks) {
+  public CopyableOutputChunk createFinalOutputSortedChunk(int chunks) {
     return new FinalOutputChunk(
-        outputFile, charset, chunkParameters.getChunkSize(SortState.SAVE_OUTPUT, chunks), context
+        finalOutputChunkId,
+        chunkParameters.getChunkSize(SortState.SAVE_OUTPUT, chunks),
+        textSerializer,
+        context
     );
   }
 }

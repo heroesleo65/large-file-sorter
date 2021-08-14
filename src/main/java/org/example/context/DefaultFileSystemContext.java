@@ -3,7 +3,7 @@ package org.example.context;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class DefaultFileSystemContext implements FileSystemContext {
 
@@ -11,11 +11,7 @@ public class DefaultFileSystemContext implements FileSystemContext {
 
   private final String prefix;
   private final Object lock = new Object();
-  private final AtomicInteger number = new AtomicInteger();
-
-  public DefaultFileSystemContext() {
-    this(null);
-  }
+  private final AtomicLong number = new AtomicLong();
 
   public DefaultFileSystemContext(String prefix) {
     this.prefix = prefix;
@@ -34,7 +30,7 @@ public class DefaultFileSystemContext implements FileSystemContext {
   }
 
   @Override
-  public int nextTemporaryFile() {
+  public long nextTemporaryFile() {
     return number.getAndIncrement();
   }
 

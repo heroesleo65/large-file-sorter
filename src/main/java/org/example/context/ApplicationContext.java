@@ -11,7 +11,7 @@ public interface ApplicationContext {
 
   void sendSignal(IOException exception);
 
-  default OutputStream getOutputStream(int fileId) throws IOException {
+  default OutputStream getOutputStream(long fileId) throws IOException {
     var file = getFileSystemContext().getTemporaryFile(fileId);
     return getStreamFactory().getOutputStream(file);
   }

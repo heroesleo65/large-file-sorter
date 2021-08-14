@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ChunksMerger {
 
-  private final OutputChunk outputChunk;
+  private final CopyableOutputChunk outputChunk;
   private final Comparator<String> comparator;
 
   public void merge(InputChunk[] chunks) {

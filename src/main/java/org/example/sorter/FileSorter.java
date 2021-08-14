@@ -85,6 +85,11 @@ public class FileSorter implements Closeable {
           outputFile, charset, chunkParameters, comparator, context
       );
 
+      if (!context.getFileSystemContext().delete(outputFile)) {
+        System.err.println("Can't delete old file '" + output + "'");
+        return;
+      }
+
       long chunksCount = sortChunks(
           chunksForProcessing,
           workCounter,
@@ -93,12 +98,7 @@ public class FileSorter implements Closeable {
           progressBar,
           verbose
       );
-      if (chunksCount <= 0) {
-        return;
-      }
-
-      if (!context.getFileSystemContext().delete(outputFile)) {
-        System.err.println("Can't delete old file '" + output + "'");
+      if (chunksCount <= 1) {
         return;
       }
 
@@ -171,6 +171,13 @@ public class FileSorter implements Closeable {
       log.error(() -> "Can't read data from file '" + input + "'", ex);
       System.err.println("Unknown exception in reading file '" + input + "'");
       return 0;
+    }
+
+    if (chunkNumber == 1) {
+      progressBar.maxHint(1);
+      setState(SAVE_OUTPUT, progressBar, verbose);
+      sortableOutputChunk.setId(chunkFactory.getFinalOutputChunkId());
+      sortableOutputChunk.setStringSerializer(chunkFactory.getTextSerializer());
     }
 
     sortAndSaveAction.accept(sortableOutputChunk);
@@ -267,7 +274,7 @@ public class FileSorter implements Closeable {
   private static abstract class MergeChunksAction {
 
     protected void merge(
-        OutputChunk outputChunk,
+        CopyableOutputChunk outputChunk,
         InputChunk[] chunks,
         Comparator<String> comparator,
         Runnable counterAction,
@@ -317,15 +324,14 @@ public class FileSorter implements Closeable {
   }
 
   @RequiredArgsConstructor
-  private static class SortAndSaveAction implements Consumer<SortableOutputChunk> {
+  private static class SortAndSaveAction implements Consumer<OutputChunk> {
 
     private final AtomicInteger counter;
     private final BlockingBag bag;
     private final ProgressBar progressBar;
 
     @Override
-    public void accept(SortableOutputChunk chunk) {
-      chunk.sort();
+    public void accept(OutputChunk chunk) {
       chunk.save();
 
       counter.decrementAndGet();

@@ -4,9 +4,12 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.function.BiPredicate;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.example.context.ApplicationContext;
+import org.example.io.RandomAccessInputStream;
+import org.example.io.StringDeserializer;
 
 @Log4j2
 public class InputSortedChunk extends AbstractInputChunk {
@@ -15,14 +18,19 @@ public class InputSortedChunk extends AbstractInputChunk {
 
   private final long id;
   private final File inputFile;
-  private long position;
-  private byte attributes = DELETE_ON_EXIT_ATTRIBUTE;
+  private final StringDeserializer deserializer;
   private final ApplicationContext context;
 
-  public InputSortedChunk(long id, int chunkSize, ApplicationContext context) {
+  private long position;
+  private byte attributes = DELETE_ON_EXIT_ATTRIBUTE;
+
+  public InputSortedChunk(
+      long id, int chunkSize, StringDeserializer deserializer, ApplicationContext context
+  ) {
     super(chunkSize);
     this.id = id;
     this.inputFile = context.getFileSystemContext().getTemporaryFile(id);
+    this.deserializer = deserializer;
     this.context = context;
   }
 
@@ -53,67 +61,30 @@ public class InputSortedChunk extends AbstractInputChunk {
 
   @Override
   public boolean load() {
-    if (!hasAccessToFile()) {
+    try {
+      return load(inputStream -> size = deserializer.read(inputStream, data, size));
+    } catch (IOException ex) {
+      log.error("Unexpected exception", ex);
+      context.sendSignal(ex);
       return false;
     }
-
-    try (var file = context.getStreamFactory().getRandomAccessInputStream(inputFile)) {
-      if (position >= file.length()) {
-        return false;
-      }
-      file.seek(position);
-
-      // MetaData:
-      // first byte - coder
-      // second byte - first decoded byte from len of string as 128 Base varint
-      var metaData = new byte[2];
-
-      var values = new byte[0];
-      var builder = new StringBuilder(0);
-      while (size < data.length) {
-        int count = file.read(metaData, 0, 2);
-        if (count <= 0) {
-          break;
-        }
-        if (count < 2) {
-          throw new EOFException();
-        }
-
-        int len = file.readVarint32(metaData[1]);
-        if (len < 0) {
-          throw new IOException("Negative length was loaded");
-        }
-
-        // TODO: add comments for explanation
-        if (context.getStringContext().hasSupportReflection() || values.length < len) {
-          values = new byte[len];
-        }
-        if (file.read(values, 0, len) != len) {
-          throw new EOFException();
-        }
-
-        data[size++] = context.getStringContext().createString(values, metaData[0], len, builder);
-      }
-
-      position = file.getFilePointer();
-      return true;
-    } catch (FileNotFoundException ex) {
-      fileNotFound();
-    } catch (IOException ex) {
-      if (ex instanceof EOFException) {
-        log.error("Unexpected end of file '{}'", inputFile);
-      } else {
-        log.error(() -> "Can't load file '" + inputFile + "'", ex);
-      }
-
-      position = Long.MAX_VALUE;
-      context.sendSignal(ex);
-    }
-
-    return false;
   }
 
-  protected boolean loadData(int bufferSize, BiPredicate<byte[], Integer> action) {
+  protected boolean copyData(int bufferSize, final Copier copier) throws IOException {
+    return load(inputStream -> {
+      final byte[] buffer = new byte[bufferSize];
+      int count;
+      while ((count = inputStream.read(buffer, 0, bufferSize)) > 0) {
+        try {
+          copier.copy(buffer, count);
+        } catch (IOException ex) {
+          throw new IOExceptionWrapper(ex);
+        }
+      }
+    });
+  }
+
+  private boolean load(Reader reader) throws IOException {
     if (!hasAccessToFile()) {
       return false;
     }
@@ -124,16 +95,12 @@ public class InputSortedChunk extends AbstractInputChunk {
       }
       file.seek(position);
 
-      final byte[] buffer = new byte[bufferSize];
-      int count;
-      while ((count = file.read(buffer, 0, bufferSize)) > 0) {
-        if (!action.test(buffer, count)) {
-          return false;
-        }
-      }
+      reader.read(file);
 
       position = file.getFilePointer();
       return true;
+    } catch (IOExceptionWrapper ex) {
+      throw ex.getException();
     } catch (FileNotFoundException ex) {
       fileNotFound();
     } catch (IOException ex) {
@@ -201,5 +168,21 @@ public class InputSortedChunk extends AbstractInputChunk {
     }
 
     return true;
+  }
+
+  @FunctionalInterface
+  public interface Reader {
+    void read(RandomAccessInputStream inputStream) throws IOException;
+  }
+
+  @FunctionalInterface
+  public interface Copier {
+    void copy(byte[] bytes, int len) throws IOException;
+  }
+
+  @Getter
+  @RequiredArgsConstructor
+  private static class IOExceptionWrapper extends IOException {
+    private final IOException exception;
   }
 }

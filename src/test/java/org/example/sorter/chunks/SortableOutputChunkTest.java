@@ -24,13 +24,16 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import org.example.context.ApplicationContext;
 import org.example.context.StringContext;
+import org.example.io.BinarySerializer;
 import org.example.io.MockOutputStream;
+import org.example.sorter.chunks.ids.OutputChunkId;
+import org.example.sorter.parameters.DefaultParameters;
 import org.example.utils.StreamHelper;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class OutputUnsortedChunkTest {
+class SortableOutputChunkTest {
   private static final List<String> UNSORTED_LINES = asList(
       "qwe", "asd", "цук", "wer", "sdf", "xcv"
   );
@@ -56,10 +59,11 @@ class OutputUnsortedChunkTest {
       throws IOException {
     var actualOutputStream = new ByteArrayOutputStream();
 
+    var outputChunkId = mock(OutputChunkId.class);
     var context = mock(ApplicationContext.class);
     var stringContext = mock(StringContext.class);
 
-    when(context.getOutputStream(anyInt())).thenReturn(new MockOutputStream(actualOutputStream));
+    when(outputChunkId.createOutputStream()).thenReturn(new MockOutputStream(actualOutputStream));
     when(context.getStringContext()).thenReturn(stringContext);
 
     when(stringContext.hasSupportReflection()).thenReturn(true);
@@ -67,11 +71,16 @@ class OutputUnsortedChunkTest {
 
     var codes = initFullValueArrayStringContext(stringContext, lines);
 
-    var chunk = new OutputUnsortedChunk(0, chunkSize, Comparator.naturalOrder(), context);
+    var chunk = new SortableOutputChunk(
+        outputChunkId,
+        chunkSize,
+        new BinarySerializer(DefaultParameters.DEFAULT_BUFFER_SIZE, context),
+        Comparator.naturalOrder(),
+        context
+    );
     for (var line : lines) {
       chunk.add(line);
     }
-    chunk.sort();
     chunk.save();
 
     var actual = actualOutputStream.toByteArray();
@@ -90,10 +99,12 @@ class OutputUnsortedChunkTest {
       throws IOException {
     var actualOutputStream = new ByteArrayOutputStream();
 
+    var outputChunkId = mock(OutputChunkId.class);
     var context = mock(ApplicationContext.class);
     var stringContext = mock(StringContext.class);
 
-    when(context.getOutputStream(anyInt())).thenReturn(new MockOutputStream(actualOutputStream));
+    when(outputChunkId.createOutputStream()).thenReturn(new MockOutputStream(actualOutputStream));
+
     when(context.getStringContext()).thenReturn(stringContext);
 
     when(stringContext.hasSupportReflection()).thenReturn(false);
@@ -101,11 +112,16 @@ class OutputUnsortedChunkTest {
 
     var codes = initPartValueArrayStringContext(stringContext, lines);
 
-    var chunk = new OutputUnsortedChunk(0, chunkSize, Comparator.naturalOrder(), context);
+    var chunk = new SortableOutputChunk(
+        outputChunkId,
+        chunkSize,
+        new BinarySerializer(DefaultParameters.DEFAULT_BUFFER_SIZE, context),
+        Comparator.naturalOrder(),
+        context
+    );
     for (var line : lines) {
       chunk.add(line);
     }
-    chunk.sort();
     chunk.save();
 
     var actual = actualOutputStream.toByteArray();

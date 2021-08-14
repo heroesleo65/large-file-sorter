@@ -4,7 +4,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -21,7 +20,7 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.log4j.Log4j2;
 import org.example.context.ApplicationContext;
 import org.example.context.DefaultStringContext;
@@ -90,7 +89,7 @@ class FileSorterTest {
 
     var input = Path.of("input");
     var output = Path.of("output");
-    var counter = new AtomicInteger();
+    var counter = new AtomicLong();
 
     Map<File, ByteArrayOutputStream> outputStreams = new ConcurrentHashMap<>();
 
