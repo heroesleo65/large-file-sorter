@@ -2,33 +2,18 @@ package org.example.sorter.chunks;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.AdditionalMatchers.not;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Stream;
 import org.example.context.ApplicationContext;
-import org.example.context.StringContext;
-import org.example.io.BinarySerializer;
 import org.example.io.MockOutputStream;
+import org.example.io.MockStringSerializer;
 import org.example.sorter.chunks.ids.OutputChunkId;
-import org.example.sorter.parameters.DefaultParameters;
-import org.example.utils.StreamHelper;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -61,131 +46,26 @@ class SortableOutputChunkTest {
 
     var outputChunkId = mock(OutputChunkId.class);
     var context = mock(ApplicationContext.class);
-    var stringContext = mock(StringContext.class);
+    var serializer = new MockStringSerializer();
+    var outputStream = new MockOutputStream(actualOutputStream);
 
-    when(outputChunkId.createOutputStream()).thenReturn(new MockOutputStream(actualOutputStream));
-    when(context.getStringContext()).thenReturn(stringContext);
-
-    when(stringContext.hasSupportReflection()).thenReturn(true);
-    when(stringContext.getCoder(anyString())).thenReturn((byte) 1);
-
-    var codes = initFullValueArrayStringContext(stringContext, lines);
+    when(outputChunkId.createOutputStream()).thenReturn(outputStream);
 
     var chunk = new SortableOutputChunk(
-        outputChunkId,
-        chunkSize,
-        new BinarySerializer(DefaultParameters.DEFAULT_BUFFER_SIZE, context),
-        Comparator.naturalOrder(),
-        context
+        outputChunkId, chunkSize, serializer, Comparator.naturalOrder(), context
     );
     for (var line : lines) {
       chunk.add(line);
     }
     chunk.save();
 
-    var actual = actualOutputStream.toByteArray();
-    var expected = getBytesFromLines(result, 1, codes, line -> 1);
-
-    assertThat(actual).containsExactly(expected);
-    assertThat(chunk.isEmpty()).isTrue();
-
-    verify(stringContext, times(result.size())).getValueArray(anyString());
-    verify(stringContext, never()).getValueArray(anyString(), anyInt(), any(), any());
-  }
-
-  @ParameterizedTest
-  @MethodSource("getSortAndSaveParametersProvider")
-  void sortAndSaveWithoutReflection(int chunkSize, List<String> lines, List<String> result)
-      throws IOException {
-    var actualOutputStream = new ByteArrayOutputStream();
-
-    var outputChunkId = mock(OutputChunkId.class);
-    var context = mock(ApplicationContext.class);
-    var stringContext = mock(StringContext.class);
-
-    when(outputChunkId.createOutputStream()).thenReturn(new MockOutputStream(actualOutputStream));
-
-    when(context.getStringContext()).thenReturn(stringContext);
-
-    when(stringContext.hasSupportReflection()).thenReturn(false);
-    when(stringContext.getCoder(anyString())).thenReturn((byte) -1);
-
-    var codes = initPartValueArrayStringContext(stringContext, lines);
-
-    var chunk = new SortableOutputChunk(
-        outputChunkId,
-        chunkSize,
-        new BinarySerializer(DefaultParameters.DEFAULT_BUFFER_SIZE, context),
-        Comparator.naturalOrder(),
-        context
+    serializer.verify(
+        /* times = */ 1,
+        outputStream,
+        result.toArray(new String[chunkSize]),
+        0,
+        result.size()
     );
-    for (var line : lines) {
-      chunk.add(line);
-    }
-    chunk.save();
-
-    var actual = actualOutputStream.toByteArray();
-    var expected = getBytesFromLines(result, -1, codes, line -> 2 * line.length());
-
-    assertThat(actual).containsExactly(expected);
     assertThat(chunk.isEmpty()).isTrue();
-
-    verify(stringContext, times(result.size())).getValueArray(anyString());
-    verify(stringContext, times(2 * result.size()))
-        .getValueArray(anyString(), anyInt(), any(), any());
-  }
-
-  private static Map<String, byte[]> initFullValueArrayStringContext(
-      StringContext stringContext, Collection<String> lines
-  ) {
-    var result = new HashMap<String, byte[]>(lines.size());
-    int number = 0;
-    for (var line : lines) {
-      var bytes = new byte[] { (byte) number };
-      result.put(line, bytes);
-      when(stringContext.getValueArray(eq(line))).thenReturn(bytes);
-      number++;
-    }
-    return result;
-  }
-
-  private static Map<String, byte[]> initPartValueArrayStringContext(
-      StringContext stringContext, Collection<String> lines
-  ) {
-    when(stringContext.getValueArray(anyString(), not(eq(0)), any(), any()))
-        .thenReturn(0);
-
-    var result = new HashMap<String, byte[]>(lines.size());
-    int number = 0;
-    for (var line : lines) {
-      int curNumber = number;
-      result.put(line, new byte[] { (byte) number, 0 });
-      when(stringContext.getValueArray(eq(line), eq(0), any(), any()))
-          .thenAnswer(invocation -> {
-            var bytes = invocation.getArgument(3, byte[].class);
-            bytes[0] = (byte) curNumber;
-            bytes[1] = 0;
-            return 1;
-          });
-      number++;
-    }
-    return result;
-  }
-
-  private static byte[] getBytesFromLines(
-      Iterable<String> lines,
-      int coder,
-      Map<String, byte[]> codes,
-      Function<String, Integer> lengthFun
-  ) throws IOException {
-    var result = new ByteArrayOutputStream();
-    byte[] metaData = new byte[6];
-    for (var line : lines) {
-      metaData[0] = (byte) coder;
-      int len = StreamHelper.writeVarint32(metaData, 1, lengthFun.apply(line));
-      result.write(metaData, 0, len);
-      result.write(codes.get(line));
-    }
-    return result.toByteArray();
   }
 }

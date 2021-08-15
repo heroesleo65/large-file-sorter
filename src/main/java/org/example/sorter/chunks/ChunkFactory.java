@@ -50,7 +50,9 @@ public class ChunkFactory {
 
     this.finalOutputChunkId = new FileOutputChunkId(outputFile, context);
 
-    this.binarySerializer = new BinarySerializer(chunkParameters.getBufferSize(), context);
+    this.binarySerializer = new BinarySerializer(
+        chunkParameters.getBufferSize(), context.getStringContext()
+    );
     this.textSerializer = new TextSerializer(charset);
 
     this.binaryDeserializer = new BinaryDeserializer(context);

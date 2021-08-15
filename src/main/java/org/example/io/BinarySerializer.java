@@ -3,14 +3,14 @@ package org.example.io;
 import java.io.IOException;
 import java.io.OutputStream;
 import lombok.RequiredArgsConstructor;
-import org.example.context.ApplicationContext;
+import org.example.context.StringContext;
 import org.example.utils.StreamHelper;
 
 @RequiredArgsConstructor
 public class BinarySerializer implements StringSerializer {
 
   private final int bufferSize;
-  private final ApplicationContext context;
+  private final StringContext context;
 
   @Override
   public void write(OutputStream stream, String[] data, int from, int to) throws IOException {
@@ -26,9 +26,9 @@ public class BinarySerializer implements StringSerializer {
     for (int i = from; i < to; i++) {
       var line = data[i];
 
-      metaData[0] = context.getStringContext().getCoder(line);
+      metaData[0] = context.getCoder(line);
 
-      var value = context.getStringContext().getValueArray(line);
+      var value = context.getValueArray(line);
       if (value == null) {
         if (chars == null) {
           chars = new char[bufferSize >> 2];
@@ -51,7 +51,7 @@ public class BinarySerializer implements StringSerializer {
       throws IOException {
     int count;
     int offset = 0;
-    while ((count = context.getStringContext().getValueArray(line, offset, chars, bytes)) > 0) {
+    while ((count = context.getValueArray(line, offset, chars, bytes)) > 0) {
       offset += count;
       stream.write(bytes, 0, 2 * count);
     }
