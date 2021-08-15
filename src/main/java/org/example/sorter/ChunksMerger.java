@@ -12,10 +12,31 @@ public class ChunksMerger {
   private final CopyableOutputChunk outputChunk;
   private final Comparator<String> comparator;
 
-  public void merge(InputChunk[] chunks) {
+  public void merge(final InputChunk chunk) {
+    outputChunk.copyAndSave(chunk);
+  }
+
+  public void merge(final InputChunk firstChunk, final InputChunk secondChunk) {
+    var firstString = firstChunk.pop();
+    var secondString = secondChunk.pop();
+
+    if (firstString == null) {
+      if (secondString != null) {
+        outputChunk.add(secondString);
+        outputChunk.copyAndSave(secondChunk);
+      }
+    } else if (secondString != null) {
+      merge(firstChunk, firstString, secondChunk, secondString);
+    } else {
+      outputChunk.add(firstString);
+      outputChunk.copyAndSave(firstChunk);
+    }
+  }
+
+  public void merge(InputChunk... chunks) {
     if (chunks.length < 3) {
       if (chunks.length == 1) {
-        outputChunk.copyAndSave(chunks[0]);
+        merge(chunks[0]);
       } else {
         merge(chunks[0], chunks[1]);
       }
@@ -74,23 +95,6 @@ public class ChunksMerger {
           }
         } while (true);
       }
-    }
-  }
-
-  public void merge(final InputChunk firstChunk, final InputChunk secondChunk) {
-    var firstString = firstChunk.pop();
-    var secondString = secondChunk.pop();
-
-    if (firstString == null) {
-      if (secondString != null) {
-        outputChunk.add(secondString);
-        outputChunk.copyAndSave(secondChunk);
-      }
-    } else if (secondString != null) {
-      merge(firstChunk, firstString, secondChunk, secondString);
-    } else {
-      outputChunk.add(firstString);
-      outputChunk.copyAndSave(firstChunk);
     }
   }
 
