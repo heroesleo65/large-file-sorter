@@ -134,7 +134,7 @@ public class FileSorter implements Closeable {
       throw new IllegalArgumentException("allowableChunks is too small");
     }
 
-    setState(PARTITION_SORT, progressBar, verbose);
+    setState(PARTITION_SORT, /* maxHint = */ -1L, progressBar, verbose);
 
     var sortableOutputChunk = chunkFactory.createSortableOutputChunk(allowableChunks);
     long chunkNumber = 1L;
@@ -174,8 +174,7 @@ public class FileSorter implements Closeable {
     }
 
     if (chunkNumber == 1) {
-      progressBar.maxHint(1);
-      setState(SAVE_OUTPUT, progressBar, verbose);
+      setState(SAVE_OUTPUT, /* maxHint = */ 1L, progressBar, verbose);
       sortableOutputChunk.setId(chunkFactory.getFinalOutputChunkId());
       sortableOutputChunk.setStringSerializer(chunkFactory.getTextSerializer());
     }
@@ -195,12 +194,11 @@ public class FileSorter implements Closeable {
       boolean verbose
   ) throws InterruptedException {
     if (remainingChunks <= 0) {
-      setState(SAVE_OUTPUT, progressBar, verbose);
+      setState(SAVE_OUTPUT, /* maxHint = */ 0L, progressBar, verbose);
       return;
     }
 
-    progressBar.maxHint(2L * remainingChunks);
-    setState(MERGE, progressBar, verbose);
+    setState(MERGE, /* maxHint = */ 2L * remainingChunks, progressBar, verbose);
 
     int allowableChunks = chunkParameters.getAllowableChunks(MERGE);
 
@@ -263,6 +261,11 @@ public class FileSorter implements Closeable {
     }
 
     return chunks;
+  }
+
+  private void setState(SortState state, long maxHint, ProgressBar progressBar, boolean verbose) {
+    progressBar.maxHint(maxHint);
+    setState(state, progressBar, verbose);
   }
 
   private void setState(SortState state, ProgressBar progressBar, boolean verbose) {
