@@ -7,7 +7,6 @@ import lombok.extern.log4j.Log4j2;
 import org.example.context.ApplicationContext;
 import org.example.io.StringSerializer;
 import org.example.sorter.OutputChunk;
-import org.example.sorter.chunks.ids.ChunkId;
 import org.example.sorter.chunks.ids.OutputChunkId;
 
 @Log4j2
