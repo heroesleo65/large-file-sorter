@@ -8,6 +8,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.function.Supplier;
 import lombok.Getter;
+import org.example.utils.DataSizeHelper;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
@@ -35,7 +36,7 @@ public class SorterArguments {
       names = {"--buffer-size"},
       description = "buffer size for saving data. (default: ${DEFAULT-VALUE})"
   )
-  private int bufferSize = DEFAULT_BUFFER_SIZE;
+  private String bufferSize = String.valueOf(DEFAULT_BUFFER_SIZE);
 
   @Option(names = {"-i", "--input"}, description = "input file", required = true)
   private Path input;
@@ -63,9 +64,9 @@ public class SorterArguments {
 
   @Option(
       names = {"-m", "--memory-size"},
-      description = "calculate 'chunks' and 'strings' using memorySize (memorySize in bytes)"
+      description = "calculate 'chunks' and 'strings' using memorySize"
   )
-  private Long memorySize;
+  private String memorySize;
 
   @Option(names = {"-h", "--help"}, description = "display a help message", usageHelp = true)
   private boolean helpRequested;
@@ -80,6 +81,17 @@ public class SorterArguments {
 
   public Charset getOutputCharset() {
     return getCharset(outputEncoding, this::getCharset);
+  }
+
+  public int getBufferSize() {
+    return (int) DataSizeHelper.parse(bufferSize).toBytes();
+  }
+
+  public Long getMemorySize() {
+    if (memorySize == null || memorySize.isBlank()) {
+      return null;
+    }
+    return DataSizeHelper.parse(memorySize).toBytes();
   }
 
   private Charset getCharset(String encoding, Supplier<Charset> defaultCharset) {
