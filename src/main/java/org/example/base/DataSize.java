@@ -1,8 +1,10 @@
 package org.example.base;
 
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
+@EqualsAndHashCode(of = "bytes")
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class DataSize {
 
@@ -46,5 +48,10 @@ public class DataSize {
 
   public static DataSize ofTeraBytes(long teraBytes) {
     return new DataSize(teraBytes << 40L);
+  }
+
+  @Override
+  public String toString() {
+    return bytes + " byte(s)";
   }
 }
