@@ -2,14 +2,11 @@ package org.example.progressbar;
 
 import java.text.DecimalFormat;
 import java.time.temporal.ChronoUnit;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.experimental.ExtensionMethod;
 import org.example.extensions.StringBuilderExtensions;
 import org.example.utils.StringDisplayHelper;
 
 @ExtensionMethod({StringBuilderExtensions.class})
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class DefaultProgressBarRenderer implements ProgressBarRenderer {
 
   private final ProgressBarStyle style;
@@ -18,6 +15,22 @@ public class DefaultProgressBarRenderer implements ProgressBarRenderer {
   private final boolean isSpeedShown;
   private final DecimalFormat speedFormat;
   private final ChronoUnit speedUnit;
+
+  protected DefaultProgressBarRenderer(
+      ProgressBarStyle style,
+      String unitName,
+      long unitSize,
+      boolean isSpeedShown,
+      DecimalFormat speedFormat,
+      ChronoUnit speedUnit
+  ) {
+    this.style = style;
+    this.unitName = unitName;
+    this.unitSize = unitSize;
+    this.isSpeedShown = isSpeedShown;
+    this.speedFormat = speedFormat;
+    this.speedUnit = speedUnit != null ? speedUnit : ChronoUnit.SECONDS;
+  }
 
   @Override
   public String render(ProgressState progress, int maxLength) {
@@ -123,23 +136,21 @@ public class DefaultProgressBarRenderer implements ProgressBarRenderer {
 
   private void appendSpeed(StringBuilder builder, double speed) {
     String suffix = "/s";
-    if (speedUnit != null) {
-      switch (speedUnit) {
-        case MINUTES:
-          suffix = "/min";
-          speed /= 60;
-          break;
-        case HOURS:
-          suffix = "/h";
-          speed /= (60 * 60);
-          break;
-        case DAYS:
-          suffix = "/d";
-          speed /= (60 * 60 * 24);
-          break;
-        default:
-          break;
-      }
+    switch (speedUnit) {
+      case MINUTES:
+        suffix = "/min";
+        speed /= 60;
+        break;
+      case HOURS:
+        suffix = "/h";
+        speed /= (60 * 60);
+        break;
+      case DAYS:
+        suffix = "/d";
+        speed /= (60 * 60 * 24);
+        break;
+      default:
+        break;
     }
 
     if (speed == 0) {
