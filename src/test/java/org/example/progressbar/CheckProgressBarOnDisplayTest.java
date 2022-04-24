@@ -1,9 +1,9 @@
 package org.example.progressbar;
 
-import org.junit.jupiter.api.Test;
+import org.example.tags.LargeTest;
 
 public class CheckProgressBarOnDisplayTest {
-  @Test
+  @LargeTest
   void progressBarFromFastToSlowSpeed() throws Exception {
     final long steps = 150;
     final long incrementStep = 100;
