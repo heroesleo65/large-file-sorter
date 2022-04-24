@@ -6,10 +6,13 @@ import java.io.IOException;
 
 public interface RandomAccessInputStream extends Closeable {
   long length() throws IOException;
+
   long getFilePointer() throws IOException;
+
   void seek(long pos) throws IOException;
 
   int read() throws IOException;
+
   int read(byte[] buffer, int off, int len) throws IOException;
 
   /**

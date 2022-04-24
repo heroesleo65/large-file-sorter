@@ -121,7 +121,7 @@ class FileSorterTest {
     });
 
     when(outputStreamFactory.getBufferedReader(eq(input), any()))
-      .thenAnswer(invocation -> new BufferedReader(new StringReader(text)));
+        .thenAnswer(invocation -> new BufferedReader(new StringReader(text)));
     when(outputStreamFactory.getOutputStream(any())).thenAnswer(invocation -> {
       var file = invocation.getArgument(0, File.class);
       var outputStream = outputStreams.computeIfAbsent(file, f -> new ByteArrayOutputStream());

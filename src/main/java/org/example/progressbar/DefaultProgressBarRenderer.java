@@ -70,7 +70,7 @@ public class DefaultProgressBarRenderer implements ProgressBarRenderer {
 
     if (max < 0) {
       // case of indefinite progress bars
-      int pos = (int)(current % length);
+      int pos = (int) (current % length);
       result.appendRepeat(style.getSpace(), pos)
           .append(style.getBlock())
           .appendRepeat(style.getSpace(), length - pos - 1);
@@ -136,6 +136,8 @@ public class DefaultProgressBarRenderer implements ProgressBarRenderer {
         case DAYS:
           suffix = "/d";
           speed /= (60 * 60 * 24);
+          break;
+        default:
           break;
       }
     }

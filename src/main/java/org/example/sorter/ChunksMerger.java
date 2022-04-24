@@ -98,13 +98,6 @@ public class ChunksMerger {
     }
   }
 
-  private void mergeOfTwoArrays(InputChunk[] chunks, Queue<QueueItem> queue) {
-    var first = queue.poll();
-    var second = queue.poll();
-    //noinspection ConstantConditions
-    merge(chunks[first.index], first.data, chunks[second.index], second.data);
-  }
-
   private void merge(
       final InputChunk firstChunk, final String firstStringOfFirstChunk,
       final InputChunk secondChunk, final String firstStringOfSecondChunk
@@ -129,6 +122,13 @@ public class ChunksMerger {
         return;
       }
     } while (true);
+  }
+
+  private void mergeOfTwoArrays(InputChunk[] chunks, Queue<QueueItem> queue) {
+    var first = queue.poll();
+    var second = queue.poll();
+    //noinspection ConstantConditions
+    merge(chunks[first.index], first.data, chunks[second.index], second.data);
   }
 
   private String copyUtilHasOrder(

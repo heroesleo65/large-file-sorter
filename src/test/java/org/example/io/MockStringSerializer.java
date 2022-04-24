@@ -57,12 +57,12 @@ public class MockStringSerializer implements StringSerializer {
 
     @Override
     public String toString() {
-      return "{" +
-          "stream=" + stream +
-          ", data=" + Arrays.toString(data) +
-          ", from=" + from +
-          ", to=" + to +
-          '}';
+      return "{"
+          + "stream=" + stream
+          + ", data=" + Arrays.toString(data)
+          + ", from=" + from
+          + ", to=" + to
+          + '}';
     }
   }
 }

@@ -5,5 +5,6 @@ import java.io.OutputStream;
 
 public interface OutputChunkId extends ChunkId {
   OutputStream createOutputStream() throws IOException;
+
   String getMessageOnFailSave();
 }

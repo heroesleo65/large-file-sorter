@@ -37,6 +37,7 @@ public class ProgressBar implements AutoCloseable {
 
   /**
    * Advances this progress bar by a specific amount.
+   *
    * @param n Step size
    */
   public ProgressBar stepBy(long n) {
@@ -46,6 +47,7 @@ public class ProgressBar implements AutoCloseable {
 
   /**
    * Advances this progress bar to the specific progress value.
+   *
    * @param n New progress value
    */
   public ProgressBar stepTo(long n) {
@@ -63,6 +65,7 @@ public class ProgressBar implements AutoCloseable {
 
   /**
    * Gives a hint to the maximum value of the progress bar.
+   *
    * @param n Hint of the maximum value. A value of -1 indicates that the progress bar is indefinite.
    */
   public ProgressBar maxHint(long n) {
@@ -88,6 +91,7 @@ public class ProgressBar implements AutoCloseable {
 
   /**
    * Sets the extra message at the end of the progress bar.
+   *
    * @param msg New message
    */
   public ProgressBar setExtraMessage(String msg) {

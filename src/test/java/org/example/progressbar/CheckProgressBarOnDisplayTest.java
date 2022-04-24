@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 public class CheckProgressBarOnDisplayTest {
   @Test
-  void ProgressBarFromFastToSlowSpeed() throws Exception {
+  void progressBarFromFastToSlowSpeed() throws Exception {
     final long steps = 150;
     final long incrementStep = 100;
 

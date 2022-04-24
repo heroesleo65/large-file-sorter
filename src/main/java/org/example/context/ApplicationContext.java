@@ -6,7 +6,9 @@ import org.example.io.StreamFactory;
 
 public interface ApplicationContext {
   StreamFactory getStreamFactory();
+
   StringContext getStringContext();
+
   FileSystemContext getFileSystemContext();
 
   void sendSignal(IOException exception);

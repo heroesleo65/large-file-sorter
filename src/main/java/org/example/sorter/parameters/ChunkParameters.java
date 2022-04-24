@@ -101,6 +101,7 @@ public class ChunkParameters {
 
   private interface Calculator {
     int getAllowableChunks(SortState state, long stringSize);
+
     int getChunkSize(SortState state, int chunks, long stringSize);
   }
 

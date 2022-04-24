@@ -153,6 +153,7 @@ public class ProgressState {
 
   private interface ProgressSpeed {
     double getSpeed();
+
     Duration getEta(long remainingProgress);
 
     static Duration getEta(long remainingProgress, long elapsedSeconds, long progress) {

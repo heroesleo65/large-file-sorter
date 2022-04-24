@@ -10,6 +10,7 @@ import java.nio.file.Path;
 
 public interface StreamFactory {
   OutputStream getOutputStream(File file) throws FileNotFoundException;
+
   RandomAccessInputStream getRandomAccessInputStream(File file) throws FileNotFoundException;
 
   BufferedReader getBufferedReader(Path path, Charset cs) throws IOException;

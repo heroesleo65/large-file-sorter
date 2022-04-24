@@ -70,20 +70,6 @@ public class InputSortedChunk extends AbstractInputChunk {
     }
   }
 
-  protected boolean copyData(int bufferSize, final Copier copier) throws IOException {
-    return load(inputStream -> {
-      final byte[] buffer = new byte[bufferSize];
-      int count;
-      while ((count = inputStream.read(buffer, 0, bufferSize)) > 0) {
-        try {
-          copier.copy(buffer, count);
-        } catch (IOException ex) {
-          throw new IOExceptionWrapper(ex);
-        }
-      }
-    });
-  }
-
   private boolean load(Reader reader) throws IOException {
     if (!hasAccessToFile()) {
       return false;
@@ -115,6 +101,20 @@ public class InputSortedChunk extends AbstractInputChunk {
     }
 
     return false;
+  }
+
+  protected boolean copyData(int bufferSize, final Copier copier) throws IOException {
+    return load(inputStream -> {
+      final byte[] buffer = new byte[bufferSize];
+      int count;
+      while ((count = inputStream.read(buffer, 0, bufferSize)) > 0) {
+        try {
+          copier.copy(buffer, count);
+        } catch (IOException ex) {
+          throw new IOExceptionWrapper(ex);
+        }
+      }
+    });
   }
 
   private void setDeleteOnExit(boolean value) {

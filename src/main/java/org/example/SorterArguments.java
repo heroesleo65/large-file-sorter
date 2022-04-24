@@ -75,6 +75,12 @@ public class SorterArguments {
     return getCharset(encoding, Charset::defaultCharset);
   }
 
+  private Charset getCharset(String encoding, Supplier<Charset> defaultCharset) {
+    return encoding == null || encoding.isBlank()
+        ? defaultCharset.get()
+        : Charset.forName(encoding);
+  }
+
   public Charset getInputCharset() {
     return getCharset(inputEncoding, this::getCharset);
   }
@@ -92,11 +98,5 @@ public class SorterArguments {
       return null;
     }
     return DataSizeHelper.parse(memorySize).toBytes();
-  }
-
-  private Charset getCharset(String encoding, Supplier<Charset> defaultCharset) {
-    return encoding == null || encoding.isBlank()
-        ? defaultCharset.get()
-        : Charset.forName(encoding);
   }
 }

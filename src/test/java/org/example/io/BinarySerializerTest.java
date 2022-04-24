@@ -55,10 +55,7 @@ class BinarySerializerTest {
   void writeWithReflection(int bufferSize, String[] data, int from, int to) throws Exception {
     final byte coder = 1;
 
-    var actualOutputStream = new ByteArrayOutputStream();
-    var outputStream = new MockOutputStream(actualOutputStream);
     var stringContext = mock(StringContext.class);
-
     when(stringContext.hasSupportReflection()).thenReturn(true);
     when(stringContext.getCoder(anyString())).thenReturn(coder);
 
@@ -68,6 +65,8 @@ class BinarySerializerTest {
       );
     }
 
+    var actualOutputStream = new ByteArrayOutputStream();
+    var outputStream = new MockOutputStream(actualOutputStream);
     var binarySerializer = new BinarySerializer(bufferSize, stringContext);
     binarySerializer.write(outputStream, data, from, to);
 
@@ -91,10 +90,7 @@ class BinarySerializerTest {
   void writeWithoutReflection(int bufferSize, String[] data, int from, int to) throws Exception {
     final byte coder = -1;
 
-    var actualOutputStream = new ByteArrayOutputStream();
-    var outputStream = new MockOutputStream(actualOutputStream);
     var stringContext = mock(StringContext.class);
-
     when(stringContext.hasSupportReflection()).thenReturn(false);
     when(stringContext.getCoder(anyString())).thenReturn(coder);
     when(stringContext.getValueArray(anyString())).thenReturn(null);
@@ -121,6 +117,8 @@ class BinarySerializerTest {
       );
     }
 
+    var actualOutputStream = new ByteArrayOutputStream();
+    var outputStream = new MockOutputStream(actualOutputStream);
     var binarySerializer = new BinarySerializer(bufferSize, stringContext);
     binarySerializer.write(outputStream, data, from, to);
 

@@ -274,7 +274,7 @@ public class FileSorter implements Closeable {
     }
   }
 
-  private static abstract class MergeChunksAction {
+  private abstract static class MergeChunksAction {
 
     protected void merge(
         CopyableOutputChunk outputChunk,

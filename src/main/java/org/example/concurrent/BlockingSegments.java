@@ -239,8 +239,9 @@ public class BlockingSegments implements BlockingBag {
     }
 
     if (newCapacity - minCapacity <= 0) {
-      if (minCapacity < 0) // overflow
+      if (minCapacity < 0) { // overflow
         throw new OutOfMemoryError();
+      }
       return minCapacity;
     }
     if (newCapacity - MAX_ARRAY_SIZE <= 0) {
@@ -258,12 +259,13 @@ public class BlockingSegments implements BlockingBag {
       long midLeftBoundVal = a[2 * mid];
       long midRightBoundVal = a[2 * mid + 1];
 
-      if (midRightBoundVal < key)
+      if (midRightBoundVal < key) {
         low = mid + 1;
-      else if (key < midLeftBoundVal)
+      } else if (key < midLeftBoundVal) {
         high = mid - 1;
-      else
+      } else {
         return mid; // key found
+      }
     }
     return -(low + 1);  // key not found.
   }

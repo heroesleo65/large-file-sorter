@@ -92,8 +92,8 @@ public final class TerminalHelper {
   }
 
   private static boolean calculateCursorMovementSupport(Terminal terminal) {
-    return terminal.getStringCapability(InfoCmp.Capability.cursor_up) != null &&
-        terminal.getStringCapability(InfoCmp.Capability.cursor_down) != null;
+    return terminal.getStringCapability(InfoCmp.Capability.cursor_up) != null
+        && terminal.getStringCapability(InfoCmp.Capability.cursor_down) != null;
   }
 
   private static void destroyTerminal() {
