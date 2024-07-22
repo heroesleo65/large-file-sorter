@@ -19,7 +19,7 @@ public abstract class AbstractOutputChunk implements OutputChunk {
   protected String[] data;
   protected int size;
 
-  public AbstractOutputChunk(
+  protected AbstractOutputChunk(
       OutputChunkId id, int chunkSize, StringSerializer serializer, ApplicationContext context
   ) {
     this.id = id;

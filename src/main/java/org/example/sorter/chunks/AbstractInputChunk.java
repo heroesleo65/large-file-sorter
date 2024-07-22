@@ -9,7 +9,7 @@ public abstract class AbstractInputChunk implements InputChunk {
   protected int cursor;
   protected int size;
 
-  public AbstractInputChunk(int cap) {
+  protected AbstractInputChunk(int cap) {
     this.data = new String[cap];
     this.cursor = 0;
     this.size = 0;

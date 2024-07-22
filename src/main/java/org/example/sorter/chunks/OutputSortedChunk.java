@@ -25,10 +25,8 @@ public class OutputSortedChunk extends AbstractCopyableOutputChunk {
 
   @Override
   public void copyAndSave(InputChunk inputChunk) {
-    if (inputChunk instanceof InputSortedChunk) {
+    if (inputChunk instanceof InputSortedChunk anotherChunk) {
       try (var stream = createOutputStream()) {
-        var anotherChunk = (InputSortedChunk) inputChunk;
-
         saveWithAdditionalData(stream, anotherChunk.data, anotherChunk.cursor, anotherChunk.size);
 
         // Copy directly binary data from anotherChunk to this chunk

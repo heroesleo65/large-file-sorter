@@ -80,7 +80,7 @@ public class SorterApplication {
             : "--memorySize"
     );
     if (!invalidValues.isEmpty()) {
-      System.out.format("Invalid parameter(s): '%s'\n", invalidValues);
+      System.out.format("Invalid parameter(s): '%s'%n", invalidValues);
     }
     return invalidValues.isEmpty();
   }

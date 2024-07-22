@@ -16,8 +16,7 @@ public interface RandomAccessInputStream extends Closeable {
   int read(byte[] buffer, int off, int len) throws IOException;
 
   /**
-   * Read integer from stream as "Base 128 Varints"
-   * (https://developers.google.com/protocol-buffers/docs/encoding)
+   * <a href="https://developers.google.com/protocol-buffers/docs/encoding">Read</a> integer from stream as "Base 128 Varints".
    */
   default int readVarint32(final int firstByte) throws IOException {
     if ((firstByte & 0x80) == 0) {

@@ -1,7 +1,6 @@
 package org.example.sorter;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -116,7 +115,7 @@ class FileSorterTest {
     when(fileSystemContext.delete(any())).thenReturn(true);
     when(fileSystemContext.nextTemporaryFile()).thenAnswer(invocation -> counter.getAndIncrement());
     when(fileSystemContext.getTemporaryFile(anyLong())).thenAnswer(invocation -> {
-      long id = invocation.getArgument(0, Long.class);
+      var id = invocation.getArgument(0, Long.class);
       return new File(String.valueOf(id));
     });
 
@@ -152,14 +151,14 @@ class FileSorterTest {
 
     assertThat(resultOutputStream).isNotNull();
 
-    var actual = resultOutputStream.toString(UTF_8).lines().collect(toList());
+    var actual = resultOutputStream.toString(UTF_8).lines().toList();
 
     assertThat(actual).isSortedAccordingTo(comparator).hasSize((int) text.lines().count());
   }
 
   private String loadResource(String name) throws IOException {
     try (var inputStream = loader.getResourceAsStream(name)) {
-      assert inputStream != null;
+      assertThat(inputStream).isNotNull();
       return new String(inputStream.readAllBytes(), UTF_8);
     }
   }

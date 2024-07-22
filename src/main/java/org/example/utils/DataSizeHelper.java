@@ -7,21 +7,21 @@ import org.example.base.DataSizeUnit;
 
 public final class DataSizeHelper {
 
-  private static final Map<Character, DataSizeUnit> dataSizeFunctions;
+  private static final Map<Character, DataSizeUnit> DATA_SIZE_FUNCTIONS;
 
   static {
-    dataSizeFunctions = new HashMap<>();
-    dataSizeFunctions.put(' ', DataSizeUnit.BYTES);
-    dataSizeFunctions.put('b', DataSizeUnit.BYTES);
-    dataSizeFunctions.put('B', DataSizeUnit.BYTES);
-    dataSizeFunctions.put('k', DataSizeUnit.KILOBYTES);
-    dataSizeFunctions.put('K', DataSizeUnit.KILOBYTES);
-    dataSizeFunctions.put('m', DataSizeUnit.MEGABYTES);
-    dataSizeFunctions.put('M', DataSizeUnit.MEGABYTES);
-    dataSizeFunctions.put('g', DataSizeUnit.GIGABYTES);
-    dataSizeFunctions.put('G', DataSizeUnit.GIGABYTES);
-    dataSizeFunctions.put('t', DataSizeUnit.TERABYTES);
-    dataSizeFunctions.put('T', DataSizeUnit.TERABYTES);
+    DATA_SIZE_FUNCTIONS = new HashMap<>();
+    DATA_SIZE_FUNCTIONS.put(' ', DataSizeUnit.BYTES);
+    DATA_SIZE_FUNCTIONS.put('b', DataSizeUnit.BYTES);
+    DATA_SIZE_FUNCTIONS.put('B', DataSizeUnit.BYTES);
+    DATA_SIZE_FUNCTIONS.put('k', DataSizeUnit.KILOBYTES);
+    DATA_SIZE_FUNCTIONS.put('K', DataSizeUnit.KILOBYTES);
+    DATA_SIZE_FUNCTIONS.put('m', DataSizeUnit.MEGABYTES);
+    DATA_SIZE_FUNCTIONS.put('M', DataSizeUnit.MEGABYTES);
+    DATA_SIZE_FUNCTIONS.put('g', DataSizeUnit.GIGABYTES);
+    DATA_SIZE_FUNCTIONS.put('G', DataSizeUnit.GIGABYTES);
+    DATA_SIZE_FUNCTIONS.put('t', DataSizeUnit.TERABYTES);
+    DATA_SIZE_FUNCTIONS.put('T', DataSizeUnit.TERABYTES);
   }
 
   private DataSizeHelper() {
@@ -51,7 +51,7 @@ public final class DataSizeHelper {
 
     if (i < text.length()) {
       char c = text.charAt(i);
-      DataSizeUnit dataSizeUnit = dataSizeFunctions.get(c);
+      DataSizeUnit dataSizeUnit = DATA_SIZE_FUNCTIONS.get(c);
       if (dataSizeUnit == null) {
         throw new NumberFormatException();
       }

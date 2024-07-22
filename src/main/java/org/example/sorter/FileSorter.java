@@ -287,7 +287,7 @@ public class FileSorter implements Closeable {
       merger.merge(chunks);
 
       counterAction.run();
-      progressBar.stepBy(chunks.length - 1);
+      progressBar.stepBy(chunks.length - 1L);
     }
   }
 

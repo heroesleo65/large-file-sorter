@@ -12,7 +12,7 @@ import org.example.sorter.chunks.ids.OutputChunkId;
 public abstract class AbstractCopyableOutputChunk extends AbstractOutputChunk
     implements CopyableOutputChunk {
 
-  public AbstractCopyableOutputChunk(
+  protected AbstractCopyableOutputChunk(
       OutputChunkId id, int chunkSize, StringSerializer serializer, ApplicationContext context
   ) {
     super(id, chunkSize, serializer, context);
@@ -29,8 +29,7 @@ public abstract class AbstractCopyableOutputChunk extends AbstractOutputChunk
 
   @Override
   public String copyWithSaveUtil(InputChunk inputChunk, Predicate<String> predicate) {
-    if (inputChunk instanceof AbstractInputChunk) {
-      var anotherChunk = (AbstractInputChunk) inputChunk;
+    if (inputChunk instanceof AbstractInputChunk anotherChunk) {
       while (anotherChunk.nextLoad()) {
         if (!predicate.test(anotherChunk.data[anotherChunk.size - 1])) {
           int position = anotherChunk.cursor;
@@ -67,10 +66,9 @@ public abstract class AbstractCopyableOutputChunk extends AbstractOutputChunk
 
   @Override
   public void copyAndSave(InputChunk inputChunk) {
-    if (inputChunk instanceof AbstractInputChunk) {
+    if (inputChunk instanceof AbstractInputChunk anotherChunk) {
       save();
 
-      var anotherChunk = (AbstractInputChunk) inputChunk;
       while (anotherChunk.nextLoad()) {
         save(anotherChunk.data, anotherChunk.cursor, anotherChunk.size);
         anotherChunk.cursor = anotherChunk.size;

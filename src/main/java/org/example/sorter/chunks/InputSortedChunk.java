@@ -51,11 +51,10 @@ public class InputSortedChunk extends AbstractInputChunk {
 
   @Override
   protected void freeResources() {
-    if (isDeleteOnExit()) {
-      if (!context.getFileSystemContext().delete(inputFile)) {
-        log.error("Can't delete file '{}'", inputFile);
-      }
+    if (isDeleteOnExit() && !context.getFileSystemContext().delete(inputFile)) {
+      log.error("Can't delete file '{}'", inputFile);
     }
+
     super.freeResources();
   }
 
