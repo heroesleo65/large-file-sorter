@@ -1,13 +1,11 @@
 package org.example.sorter.chunks;
 
 import java.io.IOException;
-import lombok.extern.log4j.Log4j2;
 import org.example.context.ApplicationContext;
 import org.example.io.StringSerializer;
 import org.example.sorter.InputChunk;
 import org.example.sorter.chunks.ids.OutputChunkId;
 
-@Log4j2
 public class OutputSortedChunk extends AbstractCopyableOutputChunk {
 
   private final int bufferSize;

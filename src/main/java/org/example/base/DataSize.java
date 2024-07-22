@@ -1,14 +1,6 @@
 package org.example.base;
 
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
-
-@EqualsAndHashCode(of = "bytes")
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class DataSize {
-
-  private final long bytes;
+public record DataSize(long bytes) {
 
   public long toBytes() {
     return bytes;

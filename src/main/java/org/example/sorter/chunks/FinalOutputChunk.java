@@ -1,11 +1,9 @@
 package org.example.sorter.chunks;
 
-import lombok.extern.log4j.Log4j2;
 import org.example.context.ApplicationContext;
 import org.example.io.StringSerializer;
 import org.example.sorter.chunks.ids.OutputChunkId;
 
-@Log4j2
 public class FinalOutputChunk extends AbstractCopyableOutputChunk {
 
   public FinalOutputChunk(

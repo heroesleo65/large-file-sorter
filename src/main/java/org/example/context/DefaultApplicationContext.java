@@ -5,15 +5,11 @@ import lombok.Getter;
 import org.example.io.FileStreamFactory;
 import org.example.io.StreamFactory;
 
+@Getter
 public class DefaultApplicationContext implements ApplicationContext {
 
-  @Getter
   private final StreamFactory streamFactory;
-
-  @Getter
   private final StringContext stringContext;
-
-  @Getter
   private final FileSystemContext fileSystemContext;
 
   public DefaultApplicationContext(String prefixTemporaryDirectory, boolean supportReflection) {
