@@ -7,8 +7,8 @@ public final class StreamHelper {
   }
 
   /**
-   * Write integer to stream as "Base 128 Varints"
-   * (https://developers.google.com/protocol-buffers/docs/encoding)
+   * Write integer to stream as
+   * <a href="https://developers.google.com/protocol-buffers/docs/encoding">"Base 128 Varints"</a>.
    */
   public static int writeVarint32(byte[] buffer, int offset, int value) {
     do {
